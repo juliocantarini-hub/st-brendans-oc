@@ -70,7 +70,7 @@ export default function Sidebar({ seccionAdmin, toggleAdmin }) {
             </svg>
           </div>
           <div>
-            <div style={{ fontFamily: 'Georgia, serif', fontSize: '14px', color: '#9FE1CB', letterSpacing: '0.2px' }}>Coral Voces</div>
+            <div style={{ fontFamily: 'Georgia, serif', fontSize: '14px', color: '#9FE1CB', letterSpacing: '0.2px' }}>Coro Almafuerte</div>
             <div style={{ fontSize: '10px', color: 'rgba(159,225,203,0.5)', marginTop: '1px' }}>Plataforma coral</div>
           </div>
         </div>
