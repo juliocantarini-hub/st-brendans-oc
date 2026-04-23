@@ -97,7 +97,7 @@ export default function Login() {
 
       {/*<Divisor texto="o continuar con" />*/}
 
-      {/*{/*{/*<BotonGoogle onClick={handleGoogle} cargando={cargandoGoogle} />*/}*/}*/}
+      {/*{/*{/*<BotonGoogle onClick={handleGoogle} cargando={cargandoGoogle} />*/}
 
       <p style={{
         textAlign: 'center', fontSize: '13px',
