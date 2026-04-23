@@ -184,9 +184,9 @@ export default function Registro() {
         </Boton>
       </form>
 
-      <Divisor texto="o registrarse con" />
+      {/*<Divisor texto="o registrarse con" />*/}
 
-      <BotonGoogle onClick={loginConGoogle} />
+      {/*<BotonGoogle onClick={loginConGoogle} />*/}
 
       <p style={{
         textAlign: 'center', fontSize: '13px',
