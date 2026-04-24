@@ -6,12 +6,16 @@ import {
   eliminarArticulo, useArticulosAdmin, CATEGORIAS, CATEGORIA_COLOR
 } from '../../hooks/useBlog'
 
-// ─── Lista de artículos admin ─────────────────────────────────────────────────
+function useEsMovil() {
+  return window.innerWidth <= 768
+}
+
 export function ArticulosAdmin() {
   const navigate = useNavigate()
   const { articulos, cargando, recargar } = useArticulosAdmin()
   const [procesando, setProcesando] = useState(null)
   const [confirmEliminar, setConfirmEliminar] = useState(null)
+  const esMovil = useEsMovil()
 
   async function togglePublicar(art) {
     setProcesando(art.id)
@@ -58,7 +62,55 @@ export function ArticulosAdmin() {
         </div>
       )}
 
-      {!cargando && (
+      {/* MÓVIL: tarjetas */}
+      {!cargando && esMovil && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          {articulos.length === 0 && (
+            <div style={{ textAlign: 'center', padding: '32px', color: '#888780', fontSize: '13px' }}>No hay artículos. Creá el primero.</div>
+          )}
+          {articulos.map(art => {
+            const cc = CATEGORIA_COLOR[art.categoria] || { bg: '#F1EFE8', color: '#5F5E5A' }
+            const catLabel = CATEGORIAS.find(c => c.valor === art.categoria)?.label || '—'
+            return (
+              <div key={art.id} style={{ background: '#FFFFFF', border: '1px solid #E8E6DF', borderRadius: '12px', padding: '14px', opacity: procesando === art.id ? 0.5 : 1 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: '14px', fontWeight: '500', color: '#1A1A18', marginBottom: '4px' }}>{art.titulo}</div>
+                    <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
+                      <span style={{ background: cc.bg, color: cc.color, fontSize: '10px', fontWeight: '600', padding: '2px 7px', borderRadius: '10px' }}>{catLabel}</span>
+                      <span style={{ fontSize: '11px', color: '#888780' }}>{art.perfiles?.nombre?.split(' ')[0] || '—'}</span>
+                      <button onClick={() => toggleDestacado(art)} disabled={!!procesando}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', opacity: art.destacado ? 1 : 0.3, padding: 0 }}>⭐</button>
+                    </div>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <button onClick={() => togglePublicar(art)} disabled={!!procesando}
+                      style={{ width: '44px', height: '24px', borderRadius: '12px', border: 'none', cursor: 'pointer', background: art.publicado ? '#0F6E56' : '#D3D1C7', position: 'relative', transition: 'background 0.2s' }}>
+                      <span style={{ position: 'absolute', top: '3px', left: art.publicado ? '22px' : '3px', width: '18px', height: '18px', borderRadius: '50%', background: '#FFFFFF', transition: 'left 0.2s' }} />
+                    </button>
+                    <span style={{ fontSize: '11px', color: art.publicado ? '#27500A' : '#888780' }}>
+                      {art.publicado ? 'Publicado' : 'Borrador'}
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', gap: '6px' }}>
+                    <button onClick={() => navigate(`/admin/blog/${art.id}`)}
+                      style={{ padding: '5px 12px', fontSize: '12px', borderRadius: '6px', border: '1px solid #D3D1C7', background: 'none', cursor: 'pointer', color: '#0F6E56', fontWeight: '500' }}>
+                      Editar
+                    </button>
+                    <button onClick={() => setConfirmEliminar(art)}
+                      style={{ padding: '5px 8px', fontSize: '12px', borderRadius: '6px', border: '1px solid #F0C5B4', background: 'none', cursor: 'pointer', color: '#A32D2D' }}>✕</button>
+                  </div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      {/* DESKTOP: tabla */}
+      {!cargando && !esMovil && (
         <div style={{ background: '#FFFFFF', border: '1px solid #E8E6DF', borderRadius: '12px', overflow: 'hidden' }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 100px 80px 80px 80px 100px', padding: '10px 16px', background: '#F8F7F3', borderBottom: '1px solid #E8E6DF', fontSize: '11px', fontWeight: '600', color: '#888780', textTransform: 'uppercase', letterSpacing: '0.4px' }}>
             <span>Artículo</span><span>Categoría</span><span>Autor</span>
@@ -66,21 +118,14 @@ export function ArticulosAdmin() {
             <span style={{ textAlign: 'center' }}>Publicado</span>
             <span style={{ textAlign: 'right' }}>Acciones</span>
           </div>
-
           {articulos.length === 0 && (
             <div style={{ padding: '32px', textAlign: 'center', color: '#888780', fontSize: '13px' }}>No hay artículos. Creá el primero.</div>
           )}
-
           {articulos.map((art, i) => {
             const cc = CATEGORIA_COLOR[art.categoria] || { bg: '#F1EFE8', color: '#5F5E5A' }
             const catLabel = CATEGORIAS.find(c => c.valor === art.categoria)?.label || '—'
             return (
-              <div key={art.id} style={{
-                display: 'grid', gridTemplateColumns: '1fr 100px 80px 80px 80px 100px',
-                padding: '12px 16px', alignItems: 'center',
-                borderBottom: i < articulos.length - 1 ? '1px solid #F1EFE8' : 'none',
-                opacity: procesando === art.id ? 0.5 : 1,
-              }}>
+              <div key={art.id} style={{ display: 'grid', gridTemplateColumns: '1fr 100px 80px 80px 80px 100px', padding: '12px 16px', alignItems: 'center', borderBottom: i < articulos.length - 1 ? '1px solid #F1EFE8' : 'none', opacity: procesando === art.id ? 0.5 : 1 }}>
                 <div>
                   <div style={{ fontSize: '13px', fontWeight: '500', color: '#1A1A18' }}>{art.titulo}</div>
                   <div style={{ fontSize: '11px', color: '#888780', marginTop: '2px' }}>
@@ -89,14 +134,10 @@ export function ArticulosAdmin() {
                 </div>
                 <span style={{ background: cc.bg, color: cc.color, fontSize: '10px', fontWeight: '600', padding: '2px 7px', borderRadius: '10px', display: 'inline-block' }}>{catLabel}</span>
                 <span style={{ fontSize: '12px', color: '#888780' }}>{art.perfiles?.nombre?.split(' ')[0] || '—'}</span>
-                {/* Toggle destacado */}
                 <div style={{ textAlign: 'center' }}>
                   <button onClick={() => toggleDestacado(art)} disabled={!!procesando}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px', opacity: art.destacado ? 1 : 0.3 }} title={art.destacado ? 'Quitar destacado' : 'Marcar como destacado'}>
-                    ⭐
-                  </button>
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px', opacity: art.destacado ? 1 : 0.3 }}>⭐</button>
                 </div>
-                {/* Toggle publicado */}
                 <div style={{ textAlign: 'center' }}>
                   <button onClick={() => togglePublicar(art)} disabled={!!procesando}
                     style={{ width: '44px', height: '24px', borderRadius: '12px', border: 'none', cursor: 'pointer', background: art.publicado ? '#0F6E56' : '#D3D1C7', position: 'relative', transition: 'background 0.2s' }}>
@@ -105,9 +146,7 @@ export function ArticulosAdmin() {
                 </div>
                 <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
                   <button onClick={() => navigate(`/admin/blog/${art.id}`)}
-                    style={{ padding: '4px 10px', fontSize: '12px', borderRadius: '6px', border: '1px solid #D3D1C7', background: 'none', cursor: 'pointer', color: '#0F6E56', fontWeight: '500' }}>
-                    Editar
-                  </button>
+                    style={{ padding: '4px 10px', fontSize: '12px', borderRadius: '6px', border: '1px solid #D3D1C7', background: 'none', cursor: 'pointer', color: '#0F6E56', fontWeight: '500' }}>Editar</button>
                   <button onClick={() => setConfirmEliminar(art)}
                     style={{ padding: '4px 8px', fontSize: '12px', borderRadius: '6px', border: '1px solid #F0C5B4', background: 'none', cursor: 'pointer', color: '#A32D2D' }}>✕</button>
                 </div>
@@ -122,7 +161,7 @@ export function ArticulosAdmin() {
           <div style={{ background: '#FFFFFF', borderRadius: '14px', padding: '28px 24px', maxWidth: '360px', width: '100%', boxShadow: '0 8px 32px rgba(0,0,0,0.12)' }}>
             <h3 style={{ fontFamily: 'Georgia, serif', fontSize: '18px', fontWeight: 'normal', margin: '0 0 10px' }}>Eliminar artículo</h3>
             <p style={{ fontSize: '14px', color: '#5F5E5A', margin: '0 0 24px' }}>
-              ¿Eliminás <strong>"{confirmEliminar.titulo}"</strong>? Esta acción no se puede deshacer.
+              ¿Eliminás <strong>"{confirmEliminar.titulo}"</strong>?
             </p>
             <div style={{ display: 'flex', gap: '10px' }}>
               <button onClick={() => setConfirmEliminar(null)} style={{ flex: 1, height: '40px', borderRadius: '8px', border: '1px solid #D3D1C7', background: 'none', cursor: 'pointer', fontSize: '13px' }}>Cancelar</button>
@@ -135,7 +174,6 @@ export function ArticulosAdmin() {
   )
 }
 
-// ─── Formulario de artículo ───────────────────────────────────────────────────
 export function ArticuloForm() {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -206,12 +244,12 @@ export function ArticuloForm() {
         </div>
       </Campo>
 
-      <Campo label="Resumen (se muestra en la lista)">
-        <textarea value={form.resumen} onChange={set('resumen')} placeholder="Breve descripción del artículo..." rows={2} style={{ ...inputStyle, height: 'auto', padding: '10px 12px', resize: 'vertical' }} />
+      <Campo label="Resumen">
+        <textarea value={form.resumen} onChange={set('resumen')} placeholder="Breve descripción..." rows={2} style={{ ...inputStyle, height: 'auto', padding: '10px 12px', resize: 'vertical' }} />
       </Campo>
 
       <Campo label="Contenido">
-        <textarea value={form.contenido} onChange={set('contenido')} placeholder="Escribí el contenido del artículo aquí..." rows={12} style={{ ...inputStyle, height: 'auto', padding: '12px', resize: 'vertical', lineHeight: '1.6' }} />
+        <textarea value={form.contenido} onChange={set('contenido')} placeholder="Escribí el contenido aquí..." rows={12} style={{ ...inputStyle, height: 'auto', padding: '12px', resize: 'vertical', lineHeight: '1.6' }} />
       </Campo>
 
       <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', padding: '10px 0', marginBottom: '16px' }}>
