@@ -98,7 +98,7 @@ export default function ObrasLista() {
       {!cargando && (
         <div style={{ background: '#FFFFFF', border: '1px solid #E8E6DF', borderRadius: '12px', overflow: 'hidden' }}>
           {/* Header */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 120px 80px 100px 100px', gap: '0', padding: '10px 16px', background: '#F8F7F3', borderBottom: '1px solid #E8E6DF', fontSize: '11px', fontWeight: '600', color: '#888780', textTransform: 'uppercase', letterSpacing: '0.4px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: window.innerWidth <= 768 ? '1fr 80px' : '1fr 120px 80px 100px 100px', gap: '0', padding: '10px 16px', background: '#F8F7F3', borderBottom: '1px solid #E8E6DF', fontSize: '11px', fontWeight: '600', color: '#888780', textTransform: 'uppercase', letterSpacing: '0.4px' }}>
             <span>Obra</span>
             <span>Estado</span>
             <span style={{ textAlign: 'center' }}>Archivos</span>
@@ -118,7 +118,7 @@ export default function ObrasLista() {
             const esUltima = i === obrasFiltradas.length - 1
             return (
               <div key={obra.id} style={{
-                display: 'grid', gridTemplateColumns: '1fr 120px 80px 100px 100px',
+                display: 'grid', gridTemplateColumns: window.innerWidth <= 768 ? '1fr 80px' : '1fr 120px 80px 100px 100px',
                 gap: '0', padding: '12px 16px', alignItems: 'center',
                 borderBottom: esUltima ? 'none' : '1px solid #F1EFE8',
                 opacity: procesando === obra.id ? 0.5 : 1,
