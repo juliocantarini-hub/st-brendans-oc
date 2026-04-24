@@ -90,13 +90,13 @@ function useAuthLogic() {
   }
 
   // ── Registro con email ───────────────────────────────────────────────────
-  async function registro(email, password, nombre) {
+  async function registro(email, password, nombre, voz) {
     setError(null)
     const { data, error } = await supabase.auth.signUp({
       email: email.trim().toLowerCase(),
       password,
       options: {
-        data: { full_name: nombre.trim() },
+        data: { full_name: nombre.trim(), voz: voz || null },
         emailRedirectTo: `${window.location.origin}/`,
       },
     })

@@ -41,7 +41,7 @@ export default function Registro() {
     setErrores({})
     setCargando(true)
     const { ok, error, necesitaConfirmacion } = await registro(
-      form.email, form.password, form.nombre
+      form.email, form.password, form.nombre, form.voz
     )
     setCargando(false)
     if (!ok) { setErrorGlobal(error); return }
