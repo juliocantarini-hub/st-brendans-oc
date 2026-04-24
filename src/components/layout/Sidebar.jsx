@@ -40,7 +40,7 @@ function NavIcon({ nombre }) {
   )
 }
 
-export default function Sidebar({ seccionAdmin, toggleAdmin }) {
+export default function Sidebar({ seccionAdmin, toggleAdmin, onCerrar }) {
   const navigate   = useNavigate()
   const location   = useLocation()
   const { perfil, cerrarSesion, esAdmin, esDirector } = useAuth()
