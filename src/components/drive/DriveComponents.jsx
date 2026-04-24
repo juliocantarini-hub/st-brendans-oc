@@ -50,7 +50,14 @@ export function DriveVisor({ fileId, titulo = 'Partitura' }) {
   )
 }
 
-export function AudioPlayer({ fileId, nombre, destacado = false }) {
+export function AudioPlayer({ fileId, nombre, destacado = false, onReproducir }) {
+  const [activo, setActivo] = useState(false)
+
+  function handlePlay() {
+    setActivo(true)
+    if (onReproducir) onReproducir({ fileId, nombre })
+  }
+
   if (!fileId) {
     return (
       <div style={{ padding: '8px 0', borderBottom: '1px solid #F1EFE8', opacity: 0.45 }}>
@@ -59,21 +66,26 @@ export function AudioPlayer({ fileId, nombre, destacado = false }) {
       </div>
     )
   }
+
   return (
     <div style={{ padding: '8px 0', borderBottom: '1px solid #F1EFE8' }}>
-      <div style={estilos.audioNombre(destacado)}>{nombre}</div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
+        <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: activo ? '#D85A30' : '#D3D1C7', flexShrink: 0 }} />
+        <div style={estilos.audioNombre(destacado)}>{nombre}</div>
+      </div>
       <iframe
         src={driveUrlAudio(fileId)}
         width="100%"
         height="80px"
         allow="autoplay"
-        style={{ border: 'none', borderRadius: '8px', marginTop: '4px' }}
+        style={{ border: 'none', borderRadius: '8px' }}
+        onLoad={handlePlay}
       />
     </div>
   )
 }
 
-export function ListaAudios({ obra, vozUsuario }) {
+export function ListaAudios({ obra, vozUsuario, onReproducir }) {
   const audios = [
     { key: 'drive_audio_general',   nombre: 'Audio general',   voz: null },
     { key: 'drive_audio_soprano',   nombre: 'Soprano',         voz: 'soprano' },
@@ -81,8 +93,7 @@ export function ListaAudios({ obra, vozUsuario }) {
     { key: 'drive_audio_tenor',     nombre: 'Tenor',           voz: 'tenor' },
     { key: 'drive_audio_bajo',      nombre: 'Bajo',            voz: 'bajo' },
   ]
-  const disponibles = audios.filter(a => obra[a.key])
-  if (disponibles.length === 0) {
+  if (audios.filter(a => obra[a.key]).length === 0) {
     return (
       <div style={estilos.vacio}>
         <p style={estilos.vaciTxt}>No hay audios disponibles todavía.</p>
@@ -97,6 +108,7 @@ export function ListaAudios({ obra, vozUsuario }) {
           fileId={obra[audio.key]}
           nombre={audio.nombre}
           destacado={audio.voz === vozUsuario}
+          onReproducir={onReproducir}
         />
       ))}
     </div>
@@ -117,10 +129,11 @@ const estilos = {
     background: '#F8F7F3', borderTop: '1px solid #E8E6DF',
   },
   linkBtn: {
-    fontSize: '12px', color: '#0F6E56', fontWeight: '500', textDecoration: 'none', padding: '4px 0',
+    fontSize: '12px', color: '#0F6E56', fontWeight: '500',
+    textDecoration: 'none', padding: '4px 0',
   },
   audioNombre: (destacado) => ({
     fontSize: '13px', fontWeight: destacado ? '600' : '400',
-    color: destacado ? '#D85A30' : '#1A1A18', marginBottom: '4px',
+    color: destacado ? '#D85A30' : '#1A1A18',
   }),
 }

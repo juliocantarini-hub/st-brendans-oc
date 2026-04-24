@@ -21,6 +21,7 @@ export default function ObraDetalle() {
   const [progreso, setProgreso] = useState(null)
   const [guardando, setGuardando] = useState(false)
   const [mensajeGuardado, setMensajeGuardado] = useState('')
+  const [audioActivo, setAudioActivo] = useState(null)
 
   const progresoActual = progreso ?? obra?.progreso ?? 'pendiente'
 
@@ -60,7 +61,7 @@ export default function ObraDetalle() {
   }
 
   return (
-    <div>
+    <div style={{ paddingBottom: audioActivo && tabActiva === 'partitura' ? '80px' : '0' }}>
       <button onClick={() => navigate('/repertorio')}
         style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#888780', background: 'none', border: 'none', cursor: 'pointer', fontSize: '13px', marginBottom: '16px', padding: 0 }}>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
@@ -115,15 +116,13 @@ export default function ObraDetalle() {
         ))}
       </div>
 
-      {/* Contenido — todos montados, solo uno visible */}
+      {/* Contenido */}
       <div style={{ background: '#FFFFFF', border: '1px solid #E8E6DF', borderRadius: '12px', padding: '20px' }}>
 
-        {/* Partitura */}
         <div style={{ display: tabActiva === 'partitura' ? 'block' : 'none' }}>
           <DriveVisor fileId={obra.drive_partitura_id} titulo={obra.titulo} />
         </div>
 
-        {/* Audios — siempre montado para que no se corte */}
         <div style={{ display: tabActiva === 'audios' ? 'block' : 'none' }}>
           {perfil?.voz && (
             <div style={{ background: '#FAECE7', border: '1px solid #F0C5B4', borderRadius: '8px', padding: '8px 12px', fontSize: '12px', color: '#712B13', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -133,10 +132,9 @@ export default function ObraDetalle() {
               El audio de tu voz ({perfil.voz}) está resaltado en naranja.
             </div>
           )}
-          <ListaAudios obra={obra} vozUsuario={perfil?.voz} />
+          <ListaAudios obra={obra} vozUsuario={perfil?.voz} onReproducir={setAudioActivo} />
         </div>
 
-        {/* Notas del director */}
         <div style={{ display: tabActiva === 'notas' ? 'block' : 'none' }}>
           {obra.notas_director ? (
             <div style={{ background: '#FAECE7', borderLeft: '3px solid #D85A30', borderRadius: '0 8px 8px 0', padding: '14px 16px', fontSize: '14px', color: '#3D1608', lineHeight: '1.7', fontStyle: 'italic' }}>
@@ -150,6 +148,45 @@ export default function ObraDetalle() {
         </div>
 
       </div>
+
+      {/* Barra flotante de audio — aparece al ver la partitura */}
+      {audioActivo && tabActiva === 'partitura' && (
+        <div style={{
+          position: 'fixed', bottom: '16px', left: '50%',
+          transform: 'translateX(-50%)',
+          background: '#0A4A3A',
+          borderRadius: '14px',
+          padding: '12px 18px',
+          display: 'flex', alignItems: 'center', gap: '12px',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
+          zIndex: 100,
+          minWidth: '280px', maxWidth: '90vw',
+        }}>
+          <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#1D9E75', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="white">
+              <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
+            </svg>
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: '11px', color: 'rgba(159,225,203,0.7)', marginBottom: '2px' }}>Reproduciendo</div>
+            <div style={{ fontSize: '13px', fontWeight: '500', color: '#FFFFFF', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {audioActivo.nombre}
+            </div>
+          </div>
+          <button
+            onClick={() => { setTabActiva('audios') }}
+            style={{ background: 'rgba(255,255,255,0.15)', border: 'none', borderRadius: '8px', padding: '6px 10px', cursor: 'pointer', fontSize: '11px', color: 'white', fontWeight: '500' }}>
+            Ver audios
+          </button>
+          <button onClick={() => setAudioActivo(null)}
+            style={{ background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: '50%', width: '28px', height: '28px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="white">
+              <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+            </svg>
+          </button>
+        </div>
+      )}
+
     </div>
   )
 }
