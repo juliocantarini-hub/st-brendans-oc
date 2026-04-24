@@ -1,7 +1,6 @@
 import { useState, useEffect, createContext, useContext } from 'react'
 import { supabase } from '../lib/supabase'
 
-// ─── Contexto ───────────────────────────────────────────────────────────────
 const AuthContext = createContext(null)
 
 export function AuthProvider({ children }) {
@@ -15,7 +14,6 @@ export function useAuth() {
   return ctx
 }
 
-// ─── Lógica principal ────────────────────────────────────────────────────────
 function useAuthLogic() {
   const [usuario, setUsuario] = useState(null)
   const [perfil, setPerfil]   = useState(null)
@@ -23,14 +21,12 @@ function useAuthLogic() {
   const [error, setError]     = useState(null)
 
   useEffect(() => {
-    // Sesión inicial
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUsuario(session?.user ?? null)
       if (session?.user) cargarPerfil(session.user.id)
       else setCargando(false)
     })
 
-    // Escuchar cambios de sesión (login, logout, token refresh)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => {
         setUsuario(session?.user ?? null)
@@ -54,6 +50,17 @@ function useAuthLogic() {
         .single()
 
       if (error) throw error
+
+      // Si el perfil no tiene voz pero el usuario la tiene en metadata, actualizarla
+      if (!data.voz) {
+        const { data: userData } = await supabase.auth.getUser()
+        const vozMeta = userData?.user?.user_metadata?.voz
+        if (vozMeta) {
+          await supabase.from('perfiles').update({ voz: vozMeta }).eq('id', userId)
+          data.voz = vozMeta
+        }
+      }
+
       setPerfil(data)
     } catch (err) {
       console.error('Error cargando perfil:', err)
@@ -62,7 +69,6 @@ function useAuthLogic() {
     }
   }
 
-  // ── Login con email y contraseña ─────────────────────────────────────────
   async function login(email, password) {
     setError(null)
     const { data, error } = await supabase.auth.signInWithPassword({
@@ -76,7 +82,6 @@ function useAuthLogic() {
     return { ok: true, data }
   }
 
-  // ── Login con Google OAuth ───────────────────────────────────────────────
   async function loginConGoogle() {
     setError(null)
     const { error } = await supabase.auth.signInWithOAuth({
@@ -89,7 +94,6 @@ function useAuthLogic() {
     if (error) setError(traducirError(error.message))
   }
 
-  // ── Registro con email ───────────────────────────────────────────────────
   async function registro(email, password, nombre, voz) {
     setError(null)
     const { data, error } = await supabase.auth.signUp({
@@ -104,7 +108,6 @@ function useAuthLogic() {
       setError(traducirError(error.message))
       return { ok: false, error: traducirError(error.message) }
     }
-    // Supabase envía email de confirmación si está activado
     return {
       ok: true,
       necesitaConfirmacion: !data.session,
@@ -112,7 +115,6 @@ function useAuthLogic() {
     }
   }
 
-  // ── Recuperar contraseña ─────────────────────────────────────────────────
   async function recuperarContrasena(email) {
     setError(null)
     const { error } = await supabase.auth.resetPasswordForEmail(
@@ -126,7 +128,6 @@ function useAuthLogic() {
     return { ok: true }
   }
 
-  // ── Nueva contraseña (desde link de email) ───────────────────────────────
   async function actualizarContrasena(nuevaContrasena) {
     setError(null)
     const { error } = await supabase.auth.updateUser({
@@ -139,7 +140,6 @@ function useAuthLogic() {
     return { ok: true }
   }
 
-  // ── Actualizar perfil ────────────────────────────────────────────────────
   async function actualizarPerfil(datos) {
     if (!usuario) return { ok: false, error: 'No hay sesión activa' }
     const { data, error } = await supabase
@@ -153,38 +153,25 @@ function useAuthLogic() {
     return { ok: true, data }
   }
 
-  // ── Cerrar sesión ────────────────────────────────────────────────────────
   async function cerrarSesion() {
     await supabase.auth.signOut()
     setPerfil(null)
     setUsuario(null)
   }
 
-  // ── Helpers ──────────────────────────────────────────────────────────────
   const esAdmin    = perfil?.rol === 'admin'
   const esDirector = perfil?.rol === 'director' || esAdmin
   const esCantante = !!perfil
 
   return {
-    usuario,
-    perfil,
-    cargando,
-    error,
-    setError,
-    login,
-    loginConGoogle,
-    registro,
-    recuperarContrasena,
-    actualizarContrasena,
-    actualizarPerfil,
-    cerrarSesion,
-    esAdmin,
-    esDirector,
-    esCantante,
+    usuario, perfil, cargando, error, setError,
+    login, loginConGoogle, registro,
+    recuperarContrasena, actualizarContrasena,
+    actualizarPerfil, cerrarSesion,
+    esAdmin, esDirector, esCantante,
   }
 }
 
-// ─── Traducción de errores de Supabase al español ────────────────────────────
 function traducirError(msg) {
   if (!msg) return 'Ocurrió un error inesperado.'
   const m = msg.toLowerCase()
