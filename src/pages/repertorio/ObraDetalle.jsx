@@ -7,9 +7,9 @@ import { DriveVisor, ListaAudios } from '../../components/drive/DriveComponents'
 const TABS = ['partitura', 'audios', 'notas']
 
 const PROGRESO_OPTS = [
-  { valor: 'pendiente',    label: 'Pendiente',   color: '#888780', bg: '#F1EFE8' },
-  { valor: 'en_progreso',  label: 'En progreso', color: '#D85A30', bg: '#FAECE7' },
-  { valor: 'estudiada',    label: 'Estudiada ✓', color: '#27500A', bg: '#EAF3DE' },
+  { valor: 'pendiente',   label: 'Pendiente',   color: '#888780', bg: '#F1EFE8' },
+  { valor: 'en_progreso', label: 'En progreso', color: '#D85A30', bg: '#FAECE7' },
+  { valor: 'estudiada',   label: 'Estudiada ✓', color: '#27500A', bg: '#EAF3DE' },
 ]
 
 export default function ObraDetalle() {
@@ -18,12 +18,11 @@ export default function ObraDetalle() {
   const { usuario, perfil } = useAuth()
   const { obra, cargando, error } = useObra(id)
   const [tabActiva, setTabActiva] = useState('partitura')
-  const [progreso, setProgreso] = useState(null) // null = usar el de la obra
+  const [progreso, setProgreso] = useState(null)
   const [guardando, setGuardando] = useState(false)
   const [mensajeGuardado, setMensajeGuardado] = useState('')
 
   const progresoActual = progreso ?? obra?.progreso ?? 'pendiente'
-  const opcionProgreso = PROGRESO_OPTS.find(p => p.valor === progresoActual) || PROGRESO_OPTS[0]
 
   async function cambiarProgreso(nuevoEstado) {
     if (!usuario || guardando) return
@@ -37,7 +36,6 @@ export default function ObraDetalle() {
     setGuardando(false)
   }
 
-  // ── Cargando ─────────────────────────────────────────────────────────────
   if (cargando) {
     return (
       <div>
@@ -49,13 +47,10 @@ export default function ObraDetalle() {
     )
   }
 
-  // ── Error ─────────────────────────────────────────────────────────────────
   if (error || !obra) {
     return (
       <div style={{ textAlign: 'center', padding: '48px 24px' }}>
-        <p style={{ color: '#A32D2D', marginBottom: '16px' }}>
-          {error || 'No encontramos esta obra.'}
-        </p>
+        <p style={{ color: '#A32D2D', marginBottom: '16px' }}>{error || 'No encontramos esta obra.'}</p>
         <button onClick={() => navigate('/repertorio')}
           style={{ color: '#0F6E56', background: 'none', border: 'none', cursor: 'pointer', fontWeight: '500' }}>
           ← Volver al repertorio
@@ -66,32 +61,18 @@ export default function ObraDetalle() {
 
   return (
     <div>
-      {/* Volver */}
-      <button
-        onClick={() => navigate('/repertorio')}
-        style={{
-          display: 'flex', alignItems: 'center', gap: '6px',
-          color: '#888780', background: 'none', border: 'none',
-          cursor: 'pointer', fontSize: '13px', marginBottom: '16px', padding: 0,
-        }}
-      >
+      <button onClick={() => navigate('/repertorio')}
+        style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#888780', background: 'none', border: 'none', cursor: 'pointer', fontSize: '13px', marginBottom: '16px', padding: 0 }}>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
           <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
         </svg>
         Volver al repertorio
       </button>
 
-      {/* Cabecera de la obra */}
-      <div style={{
-        background: '#FFFFFF', border: '1px solid #E8E6DF',
-        borderRadius: '12px', padding: '20px', marginBottom: '16px',
-      }}>
+      <div style={{ background: '#FFFFFF', border: '1px solid #E8E6DF', borderRadius: '12px', padding: '20px', marginBottom: '16px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px', flexWrap: 'wrap' }}>
           <div>
-            <h2 style={{
-              fontFamily: 'Georgia, serif', fontSize: '22px',
-              fontWeight: 'normal', color: '#1A1A18', margin: '0 0 4px',
-            }}>
+            <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '22px', fontWeight: 'normal', color: '#1A1A18', margin: '0 0 4px' }}>
               {obra.titulo}
             </h2>
             <p style={{ fontSize: '14px', color: '#888780', margin: '0 0 10px' }}>
@@ -100,45 +81,23 @@ export default function ObraDetalle() {
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
               <EstadoBadge estado={obra.estado} />
               {obra.eventos?.length > 0 && (
-                <span style={{ fontSize: '12px', color: '#888780' }}>
-                  Evento: {obra.eventos[0].titulo}
-                </span>
+                <span style={{ fontSize: '12px', color: '#888780' }}>Evento: {obra.eventos[0].titulo}</span>
               )}
             </div>
           </div>
-
-          {/* Selector de progreso */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'flex-end' }}>
-            <span style={{ fontSize: '11px', color: '#B4B2A9', textTransform: 'uppercase', letterSpacing: '0.4px' }}>
-              Mi progreso
-            </span>
+            <span style={{ fontSize: '11px', color: '#B4B2A9', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Mi progreso</span>
             <div style={{ display: 'flex', gap: '6px' }}>
               {PROGRESO_OPTS.map(op => (
-                <button
-                  key={op.valor}
-                  onClick={() => cambiarProgreso(op.valor)}
-                  disabled={guardando}
-                  style={{
-                    padding: '5px 10px', borderRadius: '6px', fontSize: '11px',
-                    cursor: guardando ? 'not-allowed' : 'pointer',
-                    border: `1px solid ${progresoActual === op.valor ? op.color : '#D3D1C7'}`,
-                    background: progresoActual === op.valor ? op.bg : 'none',
-                    color: progresoActual === op.valor ? op.color : '#888780',
-                    fontWeight: progresoActual === op.valor ? '600' : '400',
-                    transition: 'all 0.12s',
-                  }}
-                >
+                <button key={op.valor} onClick={() => cambiarProgreso(op.valor)} disabled={guardando}
+                  style={{ padding: '5px 10px', borderRadius: '6px', fontSize: '11px', cursor: guardando ? 'not-allowed' : 'pointer', border: `1px solid ${progresoActual === op.valor ? op.color : '#D3D1C7'}`, background: progresoActual === op.valor ? op.bg : 'none', color: progresoActual === op.valor ? op.color : '#888780', fontWeight: progresoActual === op.valor ? '600' : '400' }}>
                   {op.label}
                 </button>
               ))}
             </div>
-            {mensajeGuardado && (
-              <span style={{ fontSize: '11px', color: '#639922' }}>✓ {mensajeGuardado}</span>
-            )}
+            {mensajeGuardado && <span style={{ fontSize: '11px', color: '#639922' }}>✓ {mensajeGuardado}</span>}
           </div>
         </div>
-
-        {/* Descripción si existe */}
         {obra.descripcion && (
           <p style={{ fontSize: '13px', color: '#5F5E5A', margin: '14px 0 0', lineHeight: '1.6', borderTop: '1px solid #F1EFE8', paddingTop: '12px' }}>
             {obra.descripcion}
@@ -147,74 +106,49 @@ export default function ObraDetalle() {
       </div>
 
       {/* Tabs */}
-      <div style={{ display: 'flex', gap: '0', marginBottom: '14px', borderBottom: '1px solid #E8E6DF' }}>
+      <div style={{ display: 'flex', marginBottom: '14px', borderBottom: '1px solid #E8E6DF' }}>
         {TABS.map(tab => (
-          <button
-            key={tab}
-            onClick={() => setTabActiva(tab)}
-            style={{
-              padding: '8px 18px', fontSize: '13px', cursor: 'pointer',
-              background: 'none', border: 'none',
-              borderBottom: `2px solid ${tabActiva === tab ? '#0F6E56' : 'transparent'}`,
-              color: tabActiva === tab ? '#0F6E56' : '#888780',
-              fontWeight: tabActiva === tab ? '500' : '400',
-              transition: 'all 0.12s',
-              textTransform: 'capitalize',
-              marginBottom: '-1px',
-            }}
-          >
+          <button key={tab} onClick={() => setTabActiva(tab)}
+            style={{ padding: '8px 18px', fontSize: '13px', cursor: 'pointer', background: 'none', border: 'none', borderBottom: `2px solid ${tabActiva === tab ? '#0F6E56' : 'transparent'}`, color: tabActiva === tab ? '#0F6E56' : '#888780', fontWeight: tabActiva === tab ? '500' : '400', marginBottom: '-1px' }}>
             {tab === 'partitura' ? 'Partitura' : tab === 'audios' ? 'Audios' : 'Notas del director'}
           </button>
         ))}
       </div>
 
-      {/* Contenido de tabs */}
+      {/* Contenido — todos montados, solo uno visible */}
       <div style={{ background: '#FFFFFF', border: '1px solid #E8E6DF', borderRadius: '12px', padding: '20px' }}>
 
-        {/* Tab: Partitura */}
-        {tabActiva === 'partitura' && (
+        {/* Partitura */}
+        <div style={{ display: tabActiva === 'partitura' ? 'block' : 'none' }}>
           <DriveVisor fileId={obra.drive_partitura_id} titulo={obra.titulo} />
-        )}
+        </div>
 
-        {/* Tab: Audios */}
-        {tabActiva === 'audios' && (
-          <div>
-            {perfil?.voz && (
-              <div style={{
-                background: '#FAECE7', border: '1px solid #F0C5B4',
-                borderRadius: '8px', padding: '8px 12px',
-                fontSize: '12px', color: '#712B13', marginBottom: '14px',
-                display: 'flex', alignItems: 'center', gap: '6px',
-              }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="#D85A30">
-                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
-                </svg>
-                El audio de tu voz ({perfil.voz}) está resaltado en naranja.
-              </div>
-            )}
-            <ListaAudios obra={obra} vozUsuario={perfil?.voz} />
-          </div>
-        )}
+        {/* Audios — siempre montado para que no se corte */}
+        <div style={{ display: tabActiva === 'audios' ? 'block' : 'none' }}>
+          {perfil?.voz && (
+            <div style={{ background: '#FAECE7', border: '1px solid #F0C5B4', borderRadius: '8px', padding: '8px 12px', fontSize: '12px', color: '#712B13', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="#D85A30">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+              </svg>
+              El audio de tu voz ({perfil.voz}) está resaltado en naranja.
+            </div>
+          )}
+          <ListaAudios obra={obra} vozUsuario={perfil?.voz} />
+        </div>
 
-        {/* Tab: Notas del director */}
-        {tabActiva === 'notas' && (
-          obra.notas_director ? (
-            <div>
-              <div style={{
-                background: '#FAECE7', borderLeft: '3px solid #D85A30',
-                borderRadius: '0 8px 8px 0', padding: '14px 16px',
-                fontSize: '14px', color: '#3D1608', lineHeight: '1.7',
-                fontStyle: 'italic',
-              }}>
-                "{obra.notas_director}"
-              </div>
+        {/* Notas del director */}
+        <div style={{ display: tabActiva === 'notas' ? 'block' : 'none' }}>
+          {obra.notas_director ? (
+            <div style={{ background: '#FAECE7', borderLeft: '3px solid #D85A30', borderRadius: '0 8px 8px 0', padding: '14px 16px', fontSize: '14px', color: '#3D1608', lineHeight: '1.7', fontStyle: 'italic' }}>
+              "{obra.notas_director}"
             </div>
           ) : (
             <div style={{ textAlign: 'center', padding: '32px', color: '#888780' }}>
-              <p style={{ fontSize: '13px' }}>El director no ha dejado notas para esta obra todavía.</p>
+              <p style={{ fontSize: '13px' }}>El director no ha dejado notas todavía.</p>
             </div>
-          )
-        )}
+          )}
+        </div>
+
       </div>
     </div>
   )
@@ -229,10 +163,7 @@ function EstadoBadge({ estado }) {
   }
   const b = map[estado] || map.archivado
   return (
-    <span style={{
-      background: b.bg, color: b.color, fontSize: '11px',
-      fontWeight: '600', padding: '3px 10px', borderRadius: '10px',
-    }}>
+    <span style={{ background: b.bg, color: b.color, fontSize: '11px', fontWeight: '600', padding: '3px 10px', borderRadius: '10px' }}>
       {b.txt}
     </span>
   )
