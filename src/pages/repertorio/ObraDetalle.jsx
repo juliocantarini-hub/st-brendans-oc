@@ -2,9 +2,7 @@ import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useObra, marcarProgreso } from '../../hooks/useObras'
 import { useAuth } from '../../hooks/useAuth'
-import { DriveVisor, ListaAudios } from '../../components/drive/DriveComponents'
-
-const TABS = ['partitura', 'audios', 'notas']
+import { DriveVisor } from '../../components/drive/DriveComponents'
 
 const PROGRESO_OPTS = [
   { valor: 'pendiente',   label: 'Pendiente',   color: '#888780', bg: '#F1EFE8' },
@@ -12,16 +10,24 @@ const PROGRESO_OPTS = [
   { valor: 'estudiada',   label: 'Estudiada ✓', color: '#27500A', bg: '#EAF3DE' },
 ]
 
+const NOMBRES_AUDIO = {
+  drive_audio_general:   'Audio general',
+  drive_audio_soprano:   'Soprano',
+  drive_audio_contralto: 'Contralto',
+  drive_audio_tenor:     'Tenor',
+  drive_audio_bajo:      'Bajo',
+}
+
 export default function ObraDetalle() {
   const { id } = useParams()
   const navigate = useNavigate()
   const { usuario, perfil } = useAuth()
   const { obra, cargando, error } = useObra(id)
-  const [tabActiva, setTabActiva] = useState('partitura')
   const [progreso, setProgreso] = useState(null)
   const [guardando, setGuardando] = useState(false)
   const [mensajeGuardado, setMensajeGuardado] = useState('')
-  const [audioActivo, setAudioActivo] = useState(null)
+  const [audioSeleccionado, setAudioSeleccionado] = useState(null)
+  const [tabNotas, setTabNotas] = useState(false)
 
   const progresoActual = progreso ?? obra?.progreso ?? 'pendiente'
 
@@ -60,8 +66,20 @@ export default function ObraDetalle() {
     )
   }
 
+  // Audios disponibles
+  const audiosDisponibles = Object.entries(NOMBRES_AUDIO)
+    .filter(([key]) => obra[key])
+    .map(([key, nombre]) => ({ key, nombre, fileId: obra[key] }))
+
+  // Audio seleccionado o el de la voz del cantante por defecto
+  const audioMostrado = audioSeleccionado
+    || audiosDisponibles.find(a => a.key === `drive_audio_${perfil?.voz}`)
+    || audiosDisponibles[0]
+    || null
+
   return (
-    <div style={{ paddingBottom: audioActivo && tabActiva === 'partitura' ? '80px' : '0' }}>
+    <div>
+      {/* Volver */}
       <button onClick={() => navigate('/repertorio')}
         style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#888780', background: 'none', border: 'none', cursor: 'pointer', fontSize: '13px', marginBottom: '16px', padding: 0 }}>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
@@ -70,6 +88,7 @@ export default function ObraDetalle() {
         Volver al repertorio
       </button>
 
+      {/* Cabecera */}
       <div style={{ background: '#FFFFFF', border: '1px solid #E8E6DF', borderRadius: '12px', padding: '20px', marginBottom: '16px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px', flexWrap: 'wrap' }}>
           <div>
@@ -88,7 +107,7 @@ export default function ObraDetalle() {
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'flex-end' }}>
             <span style={{ fontSize: '11px', color: '#B4B2A9', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Mi progreso</span>
-            <div style={{ display: 'flex', gap: '6px' }}>
+            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
               {PROGRESO_OPTS.map(op => (
                 <button key={op.valor} onClick={() => cambiarProgreso(op.valor)} disabled={guardando}
                   style={{ padding: '5px 10px', borderRadius: '6px', fontSize: '11px', cursor: guardando ? 'not-allowed' : 'pointer', border: `1px solid ${progresoActual === op.valor ? op.color : '#D3D1C7'}`, background: progresoActual === op.valor ? op.bg : 'none', color: progresoActual === op.valor ? op.color : '#888780', fontWeight: progresoActual === op.valor ? '600' : '400' }}>
@@ -99,93 +118,88 @@ export default function ObraDetalle() {
             {mensajeGuardado && <span style={{ fontSize: '11px', color: '#639922' }}>✓ {mensajeGuardado}</span>}
           </div>
         </div>
-        {obra.descripcion && (
-          <p style={{ fontSize: '13px', color: '#5F5E5A', margin: '14px 0 0', lineHeight: '1.6', borderTop: '1px solid #F1EFE8', paddingTop: '12px' }}>
-            {obra.descripcion}
-          </p>
-        )}
       </div>
 
-      {/* Tabs */}
-      <div style={{ display: 'flex', marginBottom: '14px', borderBottom: '1px solid #E8E6DF' }}>
-        {TABS.map(tab => (
-          <button key={tab} onClick={() => setTabActiva(tab)}
-            style={{ padding: '8px 18px', fontSize: '13px', cursor: 'pointer', background: 'none', border: 'none', borderBottom: `2px solid ${tabActiva === tab ? '#0F6E56' : 'transparent'}`, color: tabActiva === tab ? '#0F6E56' : '#888780', fontWeight: tabActiva === tab ? '500' : '400', marginBottom: '-1px' }}>
-            {tab === 'partitura' ? 'Partitura' : tab === 'audios' ? 'Audios' : 'Notas del director'}
-          </button>
-        ))}
-      </div>
+      {/* Layout principal: partitura + panel lateral */}
+      <div style={{ display: 'flex', gap: '14px', alignItems: 'flex-start', flexWrap: 'wrap' }}>
 
-      {/* Contenido */}
-      <div style={{ background: '#FFFFFF', border: '1px solid #E8E6DF', borderRadius: '12px', padding: '20px' }}>
-
-        <div style={{ display: tabActiva === 'partitura' ? 'block' : 'none' }}>
+        {/* Partitura — ocupa el ancho principal */}
+        <div style={{ flex: '1 1 300px', minWidth: 0 }}>
           <DriveVisor fileId={obra.drive_partitura_id} titulo={obra.titulo} />
         </div>
 
-        <div style={{ display: tabActiva === 'audios' ? 'block' : 'none' }}>
-          {perfil?.voz && (
-            <div style={{ background: '#FAECE7', border: '1px solid #F0C5B4', borderRadius: '8px', padding: '8px 12px', fontSize: '12px', color: '#712B13', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="#D85A30">
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
-              </svg>
-              El audio de tu voz ({perfil.voz}) está resaltado en naranja.
-            </div>
-          )}
-          <ListaAudios obra={obra} vozUsuario={perfil?.voz} onReproducir={setAudioActivo} />
-        </div>
+        {/* Panel lateral: audios + notas */}
+        <div style={{ width: '240px', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '12px' }}>
 
-        <div style={{ display: tabActiva === 'notas' ? 'block' : 'none' }}>
-          {obra.notas_director ? (
-            <div style={{ background: '#FAECE7', borderLeft: '3px solid #D85A30', borderRadius: '0 8px 8px 0', padding: '14px 16px', fontSize: '14px', color: '#3D1608', lineHeight: '1.7', fontStyle: 'italic' }}>
-              "{obra.notas_director}"
+          {/* Selector de audio */}
+          {audiosDisponibles.length > 0 ? (
+            <div style={{ background: '#FFFFFF', border: '1px solid #E8E6DF', borderRadius: '12px', padding: '14px' }}>
+              <div style={{ fontSize: '11px', fontWeight: '600', color: '#5F5E5A', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '10px' }}>
+                Audios
+              </div>
+
+              {/* Botones de selección */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '12px' }}>
+                {audiosDisponibles.map(audio => {
+                  const esVozPropia = audio.key === `drive_audio_${perfil?.voz}`
+                  const seleccionado = audioMostrado?.key === audio.key
+                  return (
+                    <button key={audio.key}
+                      onClick={() => setAudioSeleccionado(audio)}
+                      style={{
+                        padding: '7px 10px', borderRadius: '8px', fontSize: '12px',
+                        cursor: 'pointer', textAlign: 'left',
+                        border: `1.5px solid ${seleccionado ? '#0F6E56' : esVozPropia ? '#D85A30' : '#D3D1C7'}`,
+                        background: seleccionado ? '#E1F5EE' : esVozPropia ? '#FAECE7' : '#FFFFFF',
+                        color: seleccionado ? '#04342C' : esVozPropia ? '#712B13' : '#5F5E5A',
+                        fontWeight: seleccionado || esVozPropia ? '600' : '400',
+                        display: 'flex', alignItems: 'center', gap: '6px',
+                      }}>
+                      {esVozPropia && <span style={{ fontSize: '10px' }}>★</span>}
+                      {audio.nombre}
+                      {esVozPropia && <span style={{ fontSize: '10px', marginLeft: 'auto' }}>Mi voz</span>}
+                    </button>
+                  )
+                })}
+              </div>
+
+              {/* Reproductor del audio seleccionado */}
+              {audioMostrado && (
+                <div>
+                  <div style={{ fontSize: '11px', color: '#888780', marginBottom: '6px' }}>
+                    {audioMostrado.nombre}
+                  </div>
+                  <iframe
+                    key={audioMostrado.fileId}
+                    src={`https://drive.google.com/file/d/${audioMostrado.fileId}/preview`}
+                    width="100%"
+                    height="80px"
+                    allow="autoplay"
+                    style={{ border: 'none', borderRadius: '8px' }}
+                  />
+                </div>
+              )}
             </div>
           ) : (
-            <div style={{ textAlign: 'center', padding: '32px', color: '#888780' }}>
-              <p style={{ fontSize: '13px' }}>El director no ha dejado notas todavía.</p>
+            <div style={{ background: '#F8F7F3', border: '1px solid #E8E6DF', borderRadius: '12px', padding: '14px', fontSize: '13px', color: '#888780', textAlign: 'center' }}>
+              No hay audios disponibles.
             </div>
           )}
-        </div>
 
-      </div>
-
-      {/* Barra flotante de audio — aparece al ver la partitura */}
-      {audioActivo && tabActiva === 'partitura' && (
-        <div style={{
-          position: 'fixed', bottom: '16px', left: '50%',
-          transform: 'translateX(-50%)',
-          background: '#0A4A3A',
-          borderRadius: '14px',
-          padding: '12px 18px',
-          display: 'flex', alignItems: 'center', gap: '12px',
-          boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
-          zIndex: 100,
-          minWidth: '280px', maxWidth: '90vw',
-        }}>
-          <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#1D9E75', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="white">
-              <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
-            </svg>
-          </div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: '11px', color: 'rgba(159,225,203,0.7)', marginBottom: '2px' }}>Reproduciendo</div>
-            <div style={{ fontSize: '13px', fontWeight: '500', color: '#FFFFFF', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {audioActivo.nombre}
+          {/* Notas del director */}
+          {obra.notas_director && (
+            <div style={{ background: '#FFFFFF', border: '1px solid #E8E6DF', borderRadius: '12px', padding: '14px' }}>
+              <div style={{ fontSize: '11px', fontWeight: '600', color: '#5F5E5A', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px' }}>
+                Notas del director
+              </div>
+              <div style={{ fontSize: '12px', color: '#3D1608', lineHeight: '1.6', fontStyle: 'italic', background: '#FAECE7', borderLeft: '3px solid #D85A30', borderRadius: '0 6px 6px 0', padding: '8px 10px' }}>
+                "{obra.notas_director}"
+              </div>
             </div>
-          </div>
-          <button
-            onClick={() => { setTabActiva('audios') }}
-            style={{ background: 'rgba(255,255,255,0.15)', border: 'none', borderRadius: '8px', padding: '6px 10px', cursor: 'pointer', fontSize: '11px', color: 'white', fontWeight: '500' }}>
-            Ver audios
-          </button>
-          <button onClick={() => setAudioActivo(null)}
-            style={{ background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: '50%', width: '28px', height: '28px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="white">
-              <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
-            </svg>
-          </button>
+          )}
+
         </div>
-      )}
+      </div>
 
     </div>
   )
