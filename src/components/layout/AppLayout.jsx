@@ -13,7 +13,7 @@ function useEsMovil() {
 
 export default function AppLayout({ children }) {
   const esMovil = useEsMovil()
-  const [abierto, setAbierto] = useState(false)
+  const [abierto, setAbierto] = useState(false) const [seccionAdmin, setSeccionAdmin] = useState(false)
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: '#F1EFE8' }}>
@@ -39,7 +39,7 @@ export default function AppLayout({ children }) {
           <Sidebar
             seccionAdmin={false}
             toggleAdmin={() => {}}
-            onCerrar={() => setAbierto(false)}
+            onCerrar={() => setAbierto(false)} onNavegar={() => setAbierto(false)} onNavegar={() => setAbierto(false)}
           />
         </div>
       )}

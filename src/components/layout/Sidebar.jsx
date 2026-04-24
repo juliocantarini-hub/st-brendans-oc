@@ -40,7 +40,7 @@ function NavIcon({ nombre }) {
   )
 }
 
-export default function Sidebar({ seccionAdmin, toggleAdmin, onCerrar }) {
+export default function Sidebar({ seccionAdmin, toggleAdmin, onCerrar, onNavegar }) {
   const navigate   = useNavigate()
   const location   = useLocation()
   const { perfil, cerrarSesion, esAdmin, esDirector } = useAuth()
@@ -99,7 +99,7 @@ export default function Sidebar({ seccionAdmin, toggleAdmin, onCerrar }) {
           return (
             <button
               key={item.ruta}
-              onClick={() => navigate(item.ruta)}
+              onClick={() => { navigate(item.ruta); if (onNavegar) onNavegar() }}
               style={{
                 width: '100%', display: 'flex', alignItems: 'center', gap: '10px',
                 padding: '10px 16px', border: 'none', cursor: 'pointer',
