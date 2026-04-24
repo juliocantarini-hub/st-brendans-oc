@@ -3,13 +3,17 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { crearAviso, publicarAviso, eliminarAviso, useAvisosAdmin, tiempoRelativo, TIPO_AVISO } from '../../hooks/useAvisos'
 
-// ─── Lista de avisos admin ────────────────────────────────────────────────────
+function useEsMovil() {
+  return window.innerWidth <= 768
+}
+
 export function AvisosAdmin() {
   const navigate = useNavigate()
   const { avisos, cargando, error, recargar } = useAvisosAdmin()
   const [procesando, setProcesando] = useState(null)
   const [confirmEliminar, setConfirmEliminar] = useState(null)
   const [mostrarForm, setMostrarForm] = useState(false)
+  const esMovil = useEsMovil()
 
   async function togglePublicar(aviso) {
     setProcesando(aviso.id)
@@ -57,35 +61,68 @@ export function AvisosAdmin() {
         </div>
       )}
 
-      {!cargando && (
+      {/* MÓVIL: tarjetas */}
+      {!cargando && esMovil && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          {avisos.length === 0 && (
+            <div style={{ textAlign: 'center', padding: '32px', color: '#888780', fontSize: '13px' }}>No hay avisos. Creá el primero.</div>
+          )}
+          {avisos.map(aviso => {
+            const tc = TIPO_AVISO[aviso.tipo] || TIPO_AVISO.material
+            const lecturas = aviso.avisos_leidos?.length || 0
+            return (
+              <div key={aviso.id} style={{ background: '#FFFFFF', border: '1px solid #E8E6DF', borderRadius: '12px', padding: '14px', opacity: procesando === aviso.id ? 0.5 : 1 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: '14px', fontWeight: '500', color: '#1A1A18', marginBottom: '3px' }}>{aviso.titulo}</div>
+                    <span style={{ background: tc.bg, color: tc.color, fontSize: '10px', fontWeight: '600', padding: '2px 7px', borderRadius: '10px', display: 'inline-block' }}>
+                      {tc.label}
+                    </span>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <span style={{ fontSize: '11px', color: '#888780' }}>{lecturas} leídos</span>
+                    <button onClick={() => togglePublicar(aviso)} disabled={!!procesando}
+                      style={{ width: '44px', height: '24px', borderRadius: '12px', border: 'none', cursor: 'pointer', background: aviso.publicado ? '#0F6E56' : '#D3D1C7', position: 'relative', transition: 'background 0.2s' }}>
+                      <span style={{ position: 'absolute', top: '3px', left: aviso.publicado ? '22px' : '3px', width: '18px', height: '18px', borderRadius: '50%', background: '#FFFFFF', transition: 'left 0.2s' }} />
+                    </button>
+                    <span style={{ fontSize: '11px', color: aviso.publicado ? '#27500A' : '#888780' }}>
+                      {aviso.publicado ? 'Publicado' : 'Borrador'}
+                    </span>
+                  </div>
+                  <button onClick={() => setConfirmEliminar(aviso)}
+                    style={{ padding: '5px 8px', fontSize: '12px', borderRadius: '6px', border: '1px solid #F0C5B4', background: 'none', cursor: 'pointer', color: '#A32D2D' }}>
+                    ✕
+                  </button>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      {/* DESKTOP: tabla */}
+      {!cargando && !esMovil && (
         <div style={{ background: '#FFFFFF', border: '1px solid #E8E6DF', borderRadius: '12px', overflow: 'hidden' }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 100px 80px 90px 90px', padding: '10px 16px', background: '#F8F7F3', borderBottom: '1px solid #E8E6DF', fontSize: '11px', fontWeight: '600', color: '#888780', textTransform: 'uppercase', letterSpacing: '0.4px' }}>
             <span>Aviso</span><span>Tipo</span><span>Lecturas</span>
             <span style={{ textAlign: 'center' }}>Publicado</span>
             <span style={{ textAlign: 'right' }}>Acciones</span>
           </div>
-
           {avisos.length === 0 && (
             <div style={{ padding: '32px', textAlign: 'center', color: '#888780', fontSize: '13px' }}>No hay avisos. Creá el primero.</div>
           )}
-
           {avisos.map((aviso, i) => {
             const tc = TIPO_AVISO[aviso.tipo] || TIPO_AVISO.material
             const lecturas = aviso.avisos_leidos?.length || 0
             return (
-              <div key={aviso.id} style={{
-                display: 'grid', gridTemplateColumns: '1fr 100px 80px 90px 90px',
-                padding: '12px 16px', alignItems: 'center',
-                borderBottom: i < avisos.length - 1 ? '1px solid #F1EFE8' : 'none',
-                opacity: procesando === aviso.id ? 0.5 : 1,
-              }}>
+              <div key={aviso.id} style={{ display: 'grid', gridTemplateColumns: '1fr 100px 80px 90px 90px', padding: '12px 16px', alignItems: 'center', borderBottom: i < avisos.length - 1 ? '1px solid #F1EFE8' : 'none', opacity: procesando === aviso.id ? 0.5 : 1 }}>
                 <div>
                   <div style={{ fontSize: '13px', fontWeight: '500', color: '#1A1A18' }}>{aviso.titulo}</div>
                   <div style={{ fontSize: '11px', color: '#888780', marginTop: '2px' }}>{tiempoRelativo(aviso.creado_en)}</div>
                 </div>
-                <span style={{ background: tc.bg, color: tc.color, fontSize: '10px', fontWeight: '600', padding: '2px 7px', borderRadius: '10px', display: 'inline-block' }}>
-                  {tc.label}
-                </span>
+                <span style={{ background: tc.bg, color: tc.color, fontSize: '10px', fontWeight: '600', padding: '2px 7px', borderRadius: '10px', display: 'inline-block' }}>{tc.label}</span>
                 <span style={{ fontSize: '12px', color: '#888780' }}>{lecturas} leídos</span>
                 <div style={{ textAlign: 'center' }}>
                   <button onClick={() => togglePublicar(aviso)} disabled={!!procesando}
@@ -95,9 +132,7 @@ export function AvisosAdmin() {
                 </div>
                 <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
                   <button onClick={() => setConfirmEliminar(aviso)}
-                    style={{ padding: '4px 8px', fontSize: '12px', borderRadius: '6px', border: '1px solid #F0C5B4', background: 'none', cursor: 'pointer', color: '#A32D2D' }}>
-                    ✕
-                  </button>
+                    style={{ padding: '4px 8px', fontSize: '12px', borderRadius: '6px', border: '1px solid #F0C5B4', background: 'none', cursor: 'pointer', color: '#A32D2D' }}>✕</button>
                 </div>
               </div>
             )
@@ -123,9 +158,8 @@ export function AvisosAdmin() {
   )
 }
 
-// ─── Formulario de nuevo aviso ────────────────────────────────────────────────
 function NuevoAvisoForm({ onGuardar, onCancelar }) {
-  const [obras, setObras]   = useState([])
+  const [obras, setObras] = useState([])
   const [eventos, setEventos] = useState([])
   const [form, setForm] = useState({ titulo: '', cuerpo: '', tipo: 'material', obra_id: '', evento_id: '' })
   const [errores, setErrores] = useState({})
@@ -189,7 +223,7 @@ function NuevoAvisoForm({ onGuardar, onCancelar }) {
           style={{ ...inputStyle, height: 'auto', padding: '10px 12px', resize: 'vertical' }} />
       </Campo>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
         <Campo label="Obra relacionada (opcional)">
           <select value={form.obra_id} onChange={set('obra_id')} style={inputStyle}>
             <option value="">Ninguna</option>
@@ -204,7 +238,7 @@ function NuevoAvisoForm({ onGuardar, onCancelar }) {
         </Campo>
       </div>
 
-      <div style={{ display: 'flex', gap: '10px', marginTop: '8px' }}>
+      <div style={{ display: 'flex', gap: '10px', marginTop: '16px' }}>
         <button onClick={() => guardar(false)} disabled={guardando}
           style={{ flex: 1, height: '42px', borderRadius: '8px', border: '1px solid #D3D1C7', background: '#FFFFFF', color: '#1A1A18', fontSize: '14px', cursor: 'pointer' }}>
           Guardar borrador
