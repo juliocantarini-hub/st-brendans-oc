@@ -12,12 +12,12 @@ const NAV_CANTANTE = [
 ]
 
 const NAV_ADMIN = [
-  { ruta: '/admin',             label: 'Dashboard',  icono: 'dashboard' },
-  { ruta: '/admin/obras',       label: 'Obras',      icono: 'musica' },
-  { ruta: '/admin/eventos',     label: 'Eventos',    icono: 'calendario' },
-  { ruta: '/admin/avisos',      label: 'Avisos',     icono: 'campana' },
-  { ruta: '/admin/blog',        label: 'Blog',       icono: 'blog' },
-  { ruta: '/admin/usuarios',    label: 'Usuarios',   icono: 'usuarios' },
+  { ruta: '/admin',          label: 'Dashboard', icono: 'dashboard' },
+  { ruta: '/admin/obras',    label: 'Obras',     icono: 'musica' },
+  { ruta: '/admin/eventos',  label: 'Eventos',   icono: 'calendario' },
+  { ruta: '/admin/avisos',   label: 'Avisos',    icono: 'campana' },
+  { ruta: '/admin/blog',     label: 'Blog',      icono: 'blog' },
+  { ruta: '/admin/usuarios', label: 'Usuarios',  icono: 'usuarios' },
 ]
 
 const ICONOS = {
@@ -29,7 +29,6 @@ const ICONOS = {
   perfil:     "M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z",
   dashboard:  "M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z",
   usuarios:   "M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z",
-  escudo:     "M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z",
 }
 
 function NavIcon({ nombre }) {
@@ -55,11 +54,15 @@ export default function Sidebar({ seccionAdmin, toggleAdmin, onCerrar, onNavegar
     return location.pathname.startsWith(ruta)
   }
 
+  function handleNavegar(ruta) {
+    navigate(ruta)
+    if (onNavegar) onNavegar()
+  }
+
   return (
     <div style={{
       width: '210px', minHeight: '100vh', background: '#0A4A3A',
       display: 'flex', flexDirection: 'column', flexShrink: 0,
-      position: 'fixed', top: 0, left: 0, bottom: 0, zIndex: 50,
     }}>
       {/* Logo */}
       <div style={{ padding: '20px 16px 16px', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
@@ -81,72 +84,6 @@ export default function Sidebar({ seccionAdmin, toggleAdmin, onCerrar, onNavegar
         <div style={{ padding: '10px 12px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
           <div style={{ display: 'flex', background: 'rgba(0,0,0,0.25)', borderRadius: '8px', overflow: 'hidden' }}>
             <button onClick={() => toggleAdmin(false)}
-              style={{ flex: 1, padding: '5px 0', fontSize: '11px', border: 'none', cursor: 'pointer', background: !seccionAdmin ? '#1D9E75' : 'none', color: !seccionAdmin ? '#FFFFFF' : 'rgba(255,255,255,0.5)', fontWeight: !seccionAdmin ? '500' : '400', borderRadius: '6px', transition: 'all 0.15s' }}>
+              style={{ flex: 1, padding: '5px 0', fontSize: '11px', border: 'none', cursor: 'pointer', background: !seccionAdmin ? '#1D9E75' : 'none', color: !seccionAdmin ? '#FFFFFF' : 'rgba(255,255,255,0.5)', fontWeight: !seccionAdmin ? '500' : '400', borderRadius: '6px' }}>
               Cantante
             </button>
-            <button onClick={() => toggleAdmin(true)}
-              style={{ flex: 1, padding: '5px 0', fontSize: '11px', border: 'none', cursor: 'pointer', background: seccionAdmin ? '#D85A30' : 'none', color: seccionAdmin ? '#FFFFFF' : 'rgba(255,255,255,0.5)', fontWeight: seccionAdmin ? '500' : '400', borderRadius: '6px', transition: 'all 0.15s' }}>
-              Admin
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Navegación */}
-      <nav style={{ flex: 1, padding: '10px 0', overflowY: 'auto' }}>
-        {(seccionAdmin && (esAdmin || esDirector) ? NAV_ADMIN : NAV_CANTANTE).map(item => {
-          const activo = isActive(item.ruta)
-          return (
-            <button
-              key={item.ruta}
-              onClick={() => { navigate(item.ruta); if (onNavegar) onNavegar() }}
-              style={{
-                width: '100%', display: 'flex', alignItems: 'center', gap: '10px',
-                padding: '10px 16px', border: 'none', cursor: 'pointer',
-                background: activo ? 'rgba(29,158,117,0.25)' : 'none',
-                borderLeft: `2px solid ${activo ? '#5DCAA5' : 'transparent'}`,
-                color: activo ? '#FFFFFF' : 'rgba(255,255,255,0.6)',
-                fontSize: '13px', textAlign: 'left',
-                transition: 'all 0.12s',
-              }}
-              onMouseEnter={e => { if (!activo) e.currentTarget.style.color = 'rgba(255,255,255,0.85)' }}
-              onMouseLeave={e => { if (!activo) e.currentTarget.style.color = 'rgba(255,255,255,0.6)' }}
-            >
-              <NavIcon nombre={item.icono} />
-              <span style={{ flex: 1 }}>{item.label}</span>
-              {item.badge && noLeidos > 0 && (
-                <span style={{ background: '#D85A30', color: 'white', fontSize: '10px', fontWeight: '600', borderRadius: '10px', padding: '1px 6px', minWidth: '18px', textAlign: 'center' }}>
-                  {noLeidos > 9 ? '9+' : noLeidos}
-                </span>
-              )}
-            </button>
-          )
-        })}
-      </nav>
-
-      {/* Usuario */}
-      <div style={{ padding: '12px 14px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-          <div style={{ width: '30px', height: '30px', borderRadius: '50%', background: '#1D9E75', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: '600', color: 'white', flexShrink: 0 }}>
-            {iniciales}
-          </div>
-          <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.9)', fontWeight: '500', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {perfil?.nombre?.split(' ')[0] || '—'}
-            </div>
-            <div style={{ fontSize: '10px', color: 'rgba(159,225,203,0.6)', textTransform: 'capitalize' }}>
-              {perfil?.voz || perfil?.rol || '—'}
-            </div>
-          </div>
-        </div>
-        <button onClick={cerrarSesion}
-          style={{ width: '100%', padding: '6px', fontSize: '11px', color: 'rgba(255,255,255,0.45)', background: 'none', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', cursor: 'pointer', transition: 'all 0.12s' }}
-          onMouseEnter={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.8)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.25)' }}
-          onMouseLeave={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.45)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)' }}
-        >
-          Cerrar sesión
-        </button>
-      </div>
-    </div>
-  )
-}
