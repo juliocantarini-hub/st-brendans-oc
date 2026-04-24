@@ -22,8 +22,8 @@ export default function Usuarios() {
   const [editando, setEditando]     = useState(null)
   const [guardando, setGuardando]   = useState(false)
   const [mensaje, setMensaje]       = useState('')
-  const [confirmEliminar, setConfirmEliminar] = useState(null)
-  const [eliminando, setEliminando] = useState(false)
+  const [confirmDesactivar, setConfirmDesactivar] = useState(null)
+  const [procesando, setProcesando] = useState(false)
   const esMovil = useEsMovil()
 
   const cargar = useCallback(async () => {
@@ -55,16 +55,13 @@ export default function Usuarios() {
     cargar()
   }
 
-  async function handleEliminar() {
-    if (!confirmEliminar) return
-    setEliminando(true)
-    // Eliminar perfil (el usuario de auth se elimina en cascada)
-    await supabase.from('perfiles').delete().eq('id', confirmEliminar.id)
-    // Eliminar de auth (requiere permisos de admin)
-    await supabase.auth.admin.deleteUser(confirmEliminar.id)
-    setEliminando(false)
-    setConfirmEliminar(null)
-    setMensaje('Cantante eliminado.')
+  async function handleDesactivar() {
+    if (!confirmDesactivar) return
+    setProcesando(true)
+    await supabase.from('perfiles').update({ estado: 'inactivo' }).eq('id', confirmDesactivar.id)
+    setProcesando(false)
+    setConfirmDesactivar(null)
+    setMensaje('Cantante desactivado.')
     setTimeout(() => setMensaje(''), 3000)
     cargar()
   }
@@ -107,15 +104,14 @@ export default function Usuarios() {
           {filtrados.map(u => {
             const rs = ROLE_STYLE[u.rol] || ROLE_STYLE.cantante
             return (
-              <div key={u.id} style={{ background: '#FFFFFF', border: '1px solid #E8E6DF', borderRadius: '12px', padding: '14px' }}>
+              <div key={u.id} style={{ background: '#FFFFFF', border: '1px solid #E8E6DF', borderRadius: '12px', padding: '14px', opacity: u.estado === 'inactivo' ? 0.6 : 1 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
                   <div>
                     <div style={{ fontSize: '14px', fontWeight: '500', color: '#1A1A18' }}>{u.nombre || '—'}</div>
-                    <div style={{ fontSize: '12px', color: '#888780', marginTop: '2px', textTransform: 'capitalize' }}>
-                      {u.voz || '—'} · <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
-                        <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: u.estado === 'activo' ? '#639922' : '#D3D1C7', display: 'inline-block' }} />
-                        {u.estado}
-                      </span>
+                    <div style={{ fontSize: '12px', color: '#888780', marginTop: '2px', textTransform: 'capitalize', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      {u.voz || '—'}
+                      <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: u.estado === 'activo' ? '#639922' : '#D3D1C7', display: 'inline-block' }} />
+                      {u.estado}
                     </div>
                   </div>
                   <span style={{ background: rs.bg, color: rs.color, fontSize: '10px', fontWeight: '600', padding: '2px 8px', borderRadius: '10px', textTransform: 'capitalize' }}>
@@ -127,10 +123,12 @@ export default function Usuarios() {
                     style={{ padding: '5px 12px', fontSize: '12px', borderRadius: '6px', border: '1px solid #D3D1C7', background: 'none', cursor: 'pointer', color: '#0F6E56', fontWeight: '500' }}>
                     Editar
                   </button>
-                  <button onClick={() => setConfirmEliminar(u)}
-                    style={{ padding: '5px 8px', fontSize: '12px', borderRadius: '6px', border: '1px solid #F0C5B4', background: 'none', cursor: 'pointer', color: '#A32D2D' }}>
-                    ✕
-                  </button>
+                  {u.estado !== 'inactivo' && (
+                    <button onClick={() => setConfirmDesactivar(u)}
+                      style={{ padding: '5px 8px', fontSize: '12px', borderRadius: '6px', border: '1px solid #F0C5B4', background: 'none', cursor: 'pointer', color: '#A32D2D' }}>
+                      Desactivar
+                    </button>
+                  )}
                 </div>
               </div>
             )
@@ -150,7 +148,7 @@ export default function Usuarios() {
           {filtrados.map((u, i) => {
             const rs = ROLE_STYLE[u.rol] || ROLE_STYLE.cantante
             return (
-              <div key={u.id} style={{ display: 'grid', gridTemplateColumns: '1fr 100px 90px 80px 110px', padding: '12px 16px', alignItems: 'center', borderBottom: i < filtrados.length - 1 ? '1px solid #F1EFE8' : 'none' }}>
+              <div key={u.id} style={{ display: 'grid', gridTemplateColumns: '1fr 100px 90px 80px 110px', padding: '12px 16px', alignItems: 'center', borderBottom: i < filtrados.length - 1 ? '1px solid #F1EFE8' : 'none', opacity: u.estado === 'inactivo' ? 0.6 : 1 }}>
                 <div>
                   <div style={{ fontSize: '13px', fontWeight: '500', color: '#1A1A18' }}>{u.nombre || '—'}</div>
                   <div style={{ fontSize: '11px', color: '#888780', marginTop: '1px' }}>{u.telefono || ''}</div>
@@ -166,10 +164,12 @@ export default function Usuarios() {
                     style={{ padding: '4px 10px', fontSize: '12px', borderRadius: '6px', border: '1px solid #D3D1C7', background: 'none', cursor: 'pointer', color: '#0F6E56', fontWeight: '500' }}>
                     Editar
                   </button>
-                  <button onClick={() => setConfirmEliminar(u)}
-                    style={{ padding: '4px 8px', fontSize: '12px', borderRadius: '6px', border: '1px solid #F0C5B4', background: 'none', cursor: 'pointer', color: '#A32D2D' }}>
-                    ✕
-                  </button>
+                  {u.estado !== 'inactivo' && (
+                    <button onClick={() => setConfirmDesactivar(u)}
+                      style={{ padding: '4px 8px', fontSize: '12px', borderRadius: '6px', border: '1px solid #F0C5B4', background: 'none', cursor: 'pointer', color: '#A32D2D' }}>
+                      Desactivar
+                    </button>
+                  )}
                 </div>
               </div>
             )
@@ -183,7 +183,6 @@ export default function Usuarios() {
           <div style={{ background: '#FFFFFF', borderRadius: '16px', padding: '28px', maxWidth: '400px', width: '100%', boxShadow: '0 8px 32px rgba(0,0,0,0.12)' }}>
             <h3 style={{ fontFamily: 'Georgia, serif', fontSize: '18px', fontWeight: 'normal', margin: '0 0 4px' }}>Editar usuario</h3>
             <p style={{ fontSize: '13px', color: '#888780', margin: '0 0 20px' }}>{editando.nombre}</p>
-
             <div style={{ marginBottom: '14px' }}>
               <label style={labelStyle}>Voz</label>
               <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
@@ -195,7 +194,6 @@ export default function Usuarios() {
                 ))}
               </div>
             </div>
-
             <div style={{ marginBottom: '14px' }}>
               <label style={labelStyle}>Rol</label>
               <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
@@ -210,7 +208,6 @@ export default function Usuarios() {
                 })}
               </div>
             </div>
-
             <div style={{ marginBottom: '20px' }}>
               <label style={labelStyle}>Estado</label>
               <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
@@ -222,7 +219,6 @@ export default function Usuarios() {
                 ))}
               </div>
             </div>
-
             <div style={{ display: 'flex', gap: '10px' }}>
               <button onClick={() => setEditando(null)} style={{ flex: 1, height: '40px', borderRadius: '8px', border: '1px solid #D3D1C7', background: 'none', cursor: 'pointer', fontSize: '13px' }}>Cancelar</button>
               <button onClick={guardarEdicion} disabled={guardando} style={{ flex: 2, height: '40px', borderRadius: '8px', border: 'none', background: '#0F6E56', color: '#FFFFFF', cursor: 'pointer', fontSize: '13px', fontWeight: '500' }}>
@@ -233,29 +229,24 @@ export default function Usuarios() {
         </div>
       )}
 
-      {/* Modal eliminar */}
-      {confirmEliminar && (
+      {/* Modal desactivar */}
+      {confirmDesactivar && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '24px' }}>
           <div style={{ background: '#FFFFFF', borderRadius: '16px', padding: '28px', maxWidth: '400px', width: '100%', boxShadow: '0 8px 32px rgba(0,0,0,0.12)' }}>
-            <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: '#FCEBEB', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '14px' }}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="#A32D2D">
-                <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
-              </svg>
-            </div>
-            <h3 style={{ fontFamily: 'Georgia, serif', fontSize: '18px', fontWeight: 'normal', margin: '0 0 8px' }}>Eliminar cantante</h3>
-            <p style={{ fontSize: '14px', color: '#5F5E5A', lineHeight: '1.6', margin: '0 0 6px' }}>
-              ¿Eliminás a <strong>{confirmEliminar.nombre}</strong> del coro?
+            <h3 style={{ fontFamily: 'Georgia, serif', fontSize: '18px', fontWeight: 'normal', margin: '0 0 8px' }}>Desactivar cantante</h3>
+            <p style={{ fontSize: '14px', color: '#5F5E5A', lineHeight: '1.6', margin: '0 0 8px' }}>
+              ¿Desactivás a <strong>{confirmDesactivar.nombre}</strong>?
             </p>
-            <p style={{ fontSize: '12px', color: '#A32D2D', margin: '0 0 24px', background: '#FCEBEB', padding: '8px 10px', borderRadius: '8px' }}>
-              Esta acción no se puede deshacer. Se eliminarán todos sus datos, asistencias y progreso de estudio.
+            <p style={{ fontSize: '12px', color: '#888780', margin: '0 0 24px', background: '#F1EFE8', padding: '8px 10px', borderRadius: '8px' }}>
+              Ya no podrá ingresar a la app. Podés volver a activarlo en cualquier momento editando su perfil.
             </p>
             <div style={{ display: 'flex', gap: '10px' }}>
-              <button onClick={() => setConfirmEliminar(null)} style={{ flex: 1, height: '40px', borderRadius: '8px', border: '1px solid #D3D1C7', background: 'none', cursor: 'pointer', fontSize: '13px' }}>
+              <button onClick={() => setConfirmDesactivar(null)} style={{ flex: 1, height: '40px', borderRadius: '8px', border: '1px solid #D3D1C7', background: 'none', cursor: 'pointer', fontSize: '13px' }}>
                 Cancelar
               </button>
-              <button onClick={handleEliminar} disabled={eliminando}
-                style={{ flex: 2, height: '40px', borderRadius: '8px', border: 'none', background: eliminando ? '#F0C5B4' : '#A32D2D', color: '#FFFFFF', cursor: eliminando ? 'not-allowed' : 'pointer', fontSize: '13px', fontWeight: '500' }}>
-                {eliminando ? 'Eliminando...' : 'Sí, eliminar cantante'}
+              <button onClick={handleDesactivar} disabled={procesando}
+                style={{ flex: 2, height: '40px', borderRadius: '8px', border: 'none', background: procesando ? '#F0C5B4' : '#A32D2D', color: '#FFFFFF', cursor: procesando ? 'not-allowed' : 'pointer', fontSize: '13px', fontWeight: '500' }}>
+                {procesando ? 'Desactivando...' : 'Sí, desactivar'}
               </button>
             </div>
           </div>
