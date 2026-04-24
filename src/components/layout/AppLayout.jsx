@@ -19,6 +19,7 @@ export default function AppLayout({ children }) {
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: '#F1EFE8' }}>
 
+      {/* Overlay móvil */}
       {esMovil && abierto && (
         <div
           onClick={() => setAbierto(false)}
@@ -30,23 +31,45 @@ export default function AppLayout({ children }) {
         />
       )}
 
+      {/* Sidebar */}
       {(!esMovil || abierto) && (
         <div style={{
           position: 'fixed', top: 0, left: 0, bottom: 0,
           zIndex: 50,
+          display: 'flex', flexDirection: 'column',
         }}>
+          {/* Botón X para cerrar — solo en móvil */}
+          {esMovil && (
+            <button
+              onClick={() => setAbierto(false)}
+              style={{
+                position: 'absolute', top: '10px', right: '-44px',
+                width: '36px', height: '36px',
+                borderRadius: '50%',
+                background: '#0A4A3A',
+                border: 'none', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+                zIndex: 51,
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="white">
+                <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+              </svg>
+            </button>
+          )}
           <Sidebar
             seccionAdmin={seccionAdmin}
             toggleAdmin={setSeccionAdmin}
-            onCerrar={() => setAbierto(false)}
             onNavegar={() => setAbierto(false)}
           />
         </div>
       )}
 
-      {esMovil && (
+      {/* Botón hamburguesa — solo en móvil cuando está cerrado */}
+      {esMovil && !abierto && (
         <button
-          onClick={() => setAbierto(v => !v)}
+          onClick={() => setAbierto(true)}
           style={{
             position: 'fixed', top: '12px', left: '12px',
             zIndex: 60,
@@ -65,6 +88,7 @@ export default function AppLayout({ children }) {
         </button>
       )}
 
+      {/* Contenido */}
       <main style={{
         marginLeft: esMovil ? 0 : '210px',
         padding: esMovil ? '60px 16px 24px' : '28px 32px',
