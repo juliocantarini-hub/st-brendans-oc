@@ -60,3 +60,21 @@ export default function AppLayout({ children }) {
           }}
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
+            <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
+          </svg>
+        </button>
+      )}
+
+      <main style={{
+        marginLeft: esMovil ? 0 : '210px',
+        padding: esMovil ? '60px 16px 24px' : '28px 32px',
+        flex: 1,
+        minHeight: '100vh',
+        width: esMovil ? '100%' : 'auto',
+      }}>
+        {children}
+      </main>
+
+    </div>
+  )
+}
