@@ -122,8 +122,8 @@ export default function ObraDetalle() {
         </div>
       </div>
 
-      {/* Panel de audios — arriba en móvil, a la derecha en desktop */}
-      {audiosDisponibles.length > 0 && (
+      {/* Panel de audios — solo en móvil */}
+      {esMovil && audiosDisponibles.length > 0 && (
         <div style={{ background: '#FFFFFF', border: '1px solid #E8E6DF', borderRadius: '12px', padding: '14px', marginBottom: '14px' }}>
           <div style={{ fontSize: '11px', fontWeight: '600', color: '#5F5E5A', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '10px' }}>
             Audios
@@ -164,8 +164,8 @@ export default function ObraDetalle() {
         </div>
       )}
 
-      {/* Notas del director */}
-      {obra.notas_director && (
+     {/* Notas del director — solo en móvil */}     
+     {esMovil && obra.notas_director && (
         <div style={{ background: '#FFFFFF', border: '1px solid #E8E6DF', borderRadius: '12px', padding: '14px', marginBottom: '14px' }}>
           <div style={{ fontSize: '11px', fontWeight: '600', color: '#5F5E5A', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px' }}>
             Notas del director
