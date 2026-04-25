@@ -13,7 +13,7 @@ export default function Registro() {
 
   const [form, setForm] = useState({
     nombre: '', email: '', password: '', confirmar: '',
-    voz: '', fecha_nacimiento: '', dni: ''
+    voz: '', fecha_nacimiento: '', dni: '', telefono: ''
   })
   const [errores, setErrores] = useState({})
   const [errorGlobal, setErrorGlobal] = useState('')
@@ -45,7 +45,7 @@ export default function Registro() {
     setCargando(true)
     const { ok, error, necesitaConfirmacion } = await registro(
       form.email, form.password, form.nombre, form.voz,
-      form.fecha_nacimiento || null, form.dni || null
+      form.fecha_nacimiento || null, form.dni || null, form.telefono || null
     )
     setCargando(false)
     if (!ok) { setErrorGlobal(error); return }
@@ -111,7 +111,11 @@ export default function Registro() {
           </select>
         </Campo>
 
-        <Campo label="Fecha de nacimiento" error={errores.fecha_nacimiento}>
+        <Campo label="Teléfono / Celular">
+          <Input type="tel" placeholder="+54 11 0000-0000" value={form.telefono} onChange={set('telefono')} />
+        </Campo>
+
+        <Campo label="Fecha de nacimiento">
           <Input type="date" value={form.fecha_nacimiento} onChange={set('fecha_nacimiento')} />
         </Campo>
 

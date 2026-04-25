@@ -95,13 +95,13 @@ function useAuthLogic() {
     if (error) setError(traducirError(error.message))
   }
 
-  async function registro(email, password, nombre, voz, fecha_nacimiento, dni) {
+  async function registro(email, password, nombre, voz, fecha_nacimiento, dni, telefono) {
     setError(null)
     const { data, error } = await supabase.auth.signUp({
       email: email.trim().toLowerCase(),
       password,
       options: {
-        data: { full_name: nombre.trim(), voz: voz || null, fecha_nacimiento: fecha_nacimiento || null, dni: dni || null },
+        data: { full_name: nombre.trim(), voz: voz || null, fecha_nacimiento: fecha_nacimiento || null, dni: dni || null, telefono: telefono || null },
         emailRedirectTo: `${window.location.origin}/`,
       },
     })

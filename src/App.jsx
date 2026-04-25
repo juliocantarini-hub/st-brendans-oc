@@ -17,7 +17,8 @@ import Calendario      from './pages/calendario/Calendario'
 import EventoDetalle   from './pages/calendario/EventoDetalle'
 import Avisos          from './pages/avisos/Avisos'
 import { Blog, ArticuloDetalle } from './pages/blog/Blog'
-import Perfil          from './pages/perfil/Perfil' import MisCompaneros   from './pages/cantantes/MisCompaneros'
+import Perfil          from './pages/perfil/Perfil' 
+import MisCompaneros   from './pages/cantantes/MisCompaneros'
 
 // Admin
 import AdminDashboard  from './pages/admin/AdminDashboard'
