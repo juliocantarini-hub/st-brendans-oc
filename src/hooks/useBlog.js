@@ -51,7 +51,7 @@ export function useArticulo(id) {
     setCargando(true)
     supabase
       .from('articulos')       
-      .select('*, perfiles(nombre), drive_pdf_id')
+      .select('*, perfiles(nombre)')
       .eq('id', id)
       .eq('publicado', true)
       .single()
