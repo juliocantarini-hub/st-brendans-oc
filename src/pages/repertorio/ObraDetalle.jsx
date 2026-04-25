@@ -11,7 +11,7 @@ const PROGRESO_OPTS = [
 ]
 
 const NOMBRES_AUDIO = {
-  drive_audio_general:   'Audio general',
+  drive_audio_general:   'DEMO',
   drive_audio_soprano:   'Soprano',
   drive_audio_contralto: 'Contralto',
   drive_audio_tenor:     'Tenor',
