@@ -75,7 +75,7 @@ export default function Usuarios() {
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
         <div>
-          <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '20px', fontWeight: 'normal', color: '#1A1A18', margin: '0 0 2px' }}>Usuarios</h2>
+          <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '20px', fontWeight: 'normal', color: '#1A1A18', margin: '0 0 2px' }}>Cantantes</h2>
           <p style={{ fontSize: '12px', color: '#888780', margin: 0 }}>
             {cargando ? 'Cargando...' : `${usuarios.length} cantante${usuarios.length !== 1 ? 's' : ''}`}
           </p>
