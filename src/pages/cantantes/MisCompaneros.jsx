@@ -52,7 +52,7 @@ export default function MisCompaneros() {
   const hoy = new Date()
   const cumpleHoy = cantantes.filter(c => {
     if (!c.fecha_nacimiento) return false
-    const nac = new Date(c.fecha_nacimiento)
+    const nac = new Date(c.fecha_nacimiento + 'T12:00:00')
     return nac.getMonth() === hoy.getMonth() && nac.getDate() === hoy.getDate()
   })
 
@@ -184,7 +184,7 @@ export default function MisCompaneros() {
                     )}
                     {c.fecha_nacimiento && (
                       <span>
-                        🎂 {new Date(c.fecha_nacimiento).toLocaleDateString('es-AR', { day: 'numeric', month: 'long' })}
+                        🎂 {new Date(c.fecha_nacimiento + 'T12:00:00').toLocaleDateString('es-AR', { day: 'numeric', month: 'long' })}
                       </span>
                     )}
                   </div>
