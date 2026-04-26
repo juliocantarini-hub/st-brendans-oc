@@ -7,29 +7,6 @@ import { useAvisos, tiempoRelativo, TIPO_AVISO } from '../hooks/useAvisos'
 import { useArticulos } from '../hooks/useBlog'
 
 export default function Inicio() {
-  const [pwaPrompt, setPwaPrompt] = useState(null)
-  const [pwaInstalada, setPwaInstalada] = useState(   localStorage.getItem('pwa-banner-cerrado') === 'true' )
-
-  useEffect(() => {
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js').catch(() => {})
-    }
-    const handlerInstall = (e) => {
-      e.preventDefault()
-      setPwaPrompt(e)
-    }
-    const handlerInstalled = () => {
-      setPwaInstalada(true)
-      setPwaPrompt(null)
-    }
-    window.addEventListener('beforeinstallprompt', handlerInstall)
-    window.addEventListener('appinstalled', handlerInstalled)
-    return () => {
-      window.removeEventListener('beforeinstallprompt', handlerInstall)
-      window.removeEventListener('appinstalled', handlerInstalled)
-    }
-  }, [])
-
   const navigate = useNavigate()
   const { perfil } = useAuth()
   const { eventos } = useEventos({ soloFuturos: true })
@@ -42,41 +19,14 @@ export default function Inicio() {
   const avisosRecientes = avisos.slice(0, 3)
   const diasProx = proximoEvento ? diasRestantes(proximoEvento.fecha_inicio) : null
 
-  async function handleInstalar() {
-    if (pwaPrompt) {
-      await pwaPrompt.prompt()
-      setPwaPrompt(null)
-    } else {
-      alert('Para instalar: tocá los ⋮ de Chrome y elegí "Agregar a pantalla de inicio"')
+  useEffect(() => {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').catch(() => {})
     }
-  }
+  }, [])
 
   return (
     <div>
-      {/* Botón instalar PWA */}
-      {!pwaInstalada && (
-        <div style={{
-          background: '#0A4A3A', borderRadius: '12px', padding: '12px 16px',
-          marginBottom: '16px', display: 'flex', alignItems: 'center',
-          justifyContent: 'space-between', gap: '12px',
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <span style={{ fontSize: '24px' }}>📲</span>
-            <div>
-              <div style={{ fontSize: '13px', fontWeight: '500', color: '#FFFFFF' }}>Instalá la app</div>
-              <div style={{ fontSize: '11px', color: 'rgba(159,225,203,0.7)' }}>Accedé más rápido desde tu celular</div>
-            </div>
-          </div>
-          <button onClick={() => {           localStorage.setItem('pwa-banner-cerrado', 'true')           setPwaInstalada(true)         }} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', cursor: 'pointer', fontSize: '18px', padding: '0 4px' }}>✕</button>         <button onClick={handleInstalar} style={{
-            background: '#1D9E75', color: '#FFFFFF', border: 'none',
-            borderRadius: '8px', padding: '8px 14px', fontSize: '12px',
-            cursor: 'pointer', fontWeight: '500', flexShrink: 0,
-          }}>
-            Instalar
-          </button>
-        </div>
-      )}
-
       {/* Banner de bienvenida */}
       <div style={{
         background: 'linear-gradient(135deg, #0A4A3A 0%, #0F6E56 100%)',
@@ -110,10 +60,18 @@ export default function Inicio() {
       </div>
 
       {/* Stats rápidas */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '24px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '16px' }}>
         <StatCard val={obras.length} label="Obras en repertorio" color="#0F6E56" bg="#E1F5EE" onClick={() => navigate('/repertorio')} />
         <StatCard val={noLeidos} label={noLeidos === 1 ? 'Aviso sin leer' : 'Avisos sin leer'} color={noLeidos > 0 ? '#D85A30' : '#888780'} bg={noLeidos > 0 ? '#FAECE7' : '#F1EFE8'} onClick={() => navigate('/avisos')} />
         <StatCard val={eventos.length} label="Eventos próximos" color="#378ADD" bg="#E6F1FB" onClick={() => navigate('/calendario')} />
+      </div>
+
+      {/* Instrucción instalar app */}
+      <div style={{ background: '#E1F5EE', border: '1px solid #B4D8CE', borderRadius: '12px', padding: '12px 16px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <span style={{ fontSize: '20px', flexShrink: 0 }}>📲</span>
+        <div style={{ fontSize: '12px', color: '#04342C', lineHeight: '1.5' }}>
+          <strong>Instalá la app:</strong> tocá los ⋮ de Chrome → "Agregar a pantalla de inicio"
+        </div>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: window.innerWidth <= 768 ? '1fr' : '1fr 1fr', gap: '16px' }}>
