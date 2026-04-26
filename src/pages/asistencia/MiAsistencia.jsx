@@ -25,7 +25,7 @@ export default function MiAsistencia() {
           Mi asistencia
         </h2>
         <p style={{ fontSize: '13px', color: '#888780', margin: 0 }}>
-          Tu historial de presencias en el coro
+          Tu historial de asistencia en el coro
         </p>
       </div>
 
