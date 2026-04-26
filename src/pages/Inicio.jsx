@@ -33,7 +33,7 @@ export default function Inicio() {
             Hola, {perfil?.nombre?.split(' ')[0] || 'bienvenida/o'} 👋
           </h2>
           <p style={{ fontSize: '13px', color: 'rgba(159,225,203,0.8)', margin: 0, textTransform: 'capitalize' }}>
-            {perfil?.voz ? `${perfil.voz} · Coro de Cámara` : 'Plataforma de estudio coral'}
+            {perfil?.voz ? `${perfil.voz} · Coro de Almafuerte` : 'Plataforma de estudio coral'}
           </p>
         </div>
         {proximoEvento && (
