@@ -1,23 +1,27 @@
+import { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
 import { useAvisos } from '../../hooks/useAvisos'
 
 const NAV_CANTANTE = [
-  { ruta: '/',           label: 'Inicio',     icono: 'inicio' },
-  { ruta: '/repertorio', label: 'Repertorio', icono: 'musica' },
-  { ruta: '/calendario', label: 'Calendario', icono: 'calendario' },
-  { ruta: '/avisos',     label: 'Avisos',     icono: 'campana', badge: true },
-  { ruta: '/blog',       label: 'Textos', icono: 'blog' },
-  { ruta: '/asistencia',  label: 'Mi asistencia', icono: 'calendario' }, { ruta: '/companeros', label: 'Mis compañeros', icono: 'usuarios' }, { ruta: '/perfil',     label: 'Mi perfil',  icono: 'perfil' },
+  { ruta: '/',           label: 'Inicio',         icono: 'inicio' },
+  { ruta: '/repertorio', label: 'Repertorio',     icono: 'musica' },
+  { ruta: '/calendario', label: 'Calendario',     icono: 'calendario' },
+  { ruta: '/avisos',     label: 'Avisos',         icono: 'campana', badge: true },
+  { ruta: '/blog',       label: 'Textos',         icono: 'blog' },
+  { ruta: '/asistencia', label: 'Mi asistencia',  icono: 'calendario' },
+  { ruta: '/companeros', label: 'Mis compañeros', icono: 'usuarios' },
+  { ruta: '/perfil',     label: 'Mi perfil',      icono: 'perfil' },
 ]
 
 const NAV_ADMIN = [
-  { ruta: '/admin',          label: 'Dashboard', icono: 'dashboard' },
-  { ruta: '/admin/obras',    label: 'Obras',     icono: 'musica' },
-  { ruta: '/admin/eventos',  label: 'Eventos',   icono: 'calendario' },
-  { ruta: '/admin/asistencia', label: 'Asistencia', icono: 'calendario' }, { ruta: '/admin/avisos',   label: 'Avisos',    icono: 'campana' },
-  { ruta: '/admin/blog',     label: 'Textos',      icono: 'blog' },
-  { ruta: '/admin/usuarios', label: 'Cantantes',  icono: 'usuarios' },
+  { ruta: '/admin',            label: 'Dashboard',  icono: 'dashboard' },
+  { ruta: '/admin/obras',      label: 'Obras',      icono: 'musica' },
+  { ruta: '/admin/eventos',    label: 'Eventos',    icono: 'calendario' },
+  { ruta: '/admin/asistencia', label: 'Asistencia', icono: 'calendario' },
+  { ruta: '/admin/avisos',     label: 'Avisos',     icono: 'campana' },
+  { ruta: '/admin/blog',       label: 'Textos',     icono: 'blog' },
+  { ruta: '/admin/usuarios',   label: 'Cantantes',  icono: 'usuarios' },
 ]
 
 const ICONOS = {
@@ -36,6 +40,7 @@ export default function Sidebar({ seccionAdmin, toggleAdmin, onNavegar }) {
   const location = useLocation()
   const { perfil, cerrarSesion, esAdmin, esDirector } = useAuth()
   const { noLeidos } = useAvisos()
+  const [mostrarAyuda, setMostrarAyuda] = useState(false)
 
   const iniciales = perfil?.nombre
     ? perfil.nombre.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase()
@@ -54,6 +59,7 @@ export default function Sidebar({ seccionAdmin, toggleAdmin, onNavegar }) {
   return (
     <div style={{ width: '210px', minHeight: '100vh', background: '#0A4A3A', display: 'flex', flexDirection: 'column' }}>
 
+      {/* Logo */}
       <div style={{ padding: '20px 16px 16px', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <div style={{ width: '34px', height: '34px', background: '#1D9E75', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -68,6 +74,7 @@ export default function Sidebar({ seccionAdmin, toggleAdmin, onNavegar }) {
         </div>
       </div>
 
+      {/* Toggle Cantante/Admin */}
       {(esAdmin || esDirector) && (
         <div style={{ padding: '10px 12px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
           <div style={{ display: 'flex', background: 'rgba(0,0,0,0.25)', borderRadius: '8px', overflow: 'hidden' }}>
@@ -83,7 +90,8 @@ export default function Sidebar({ seccionAdmin, toggleAdmin, onNavegar }) {
         </div>
       )}
 
-      <nav style={{ flex: 1, padding: '10px 0' }}>
+      {/* Nav */}
+      <nav style={{ flex: 1, padding: '10px 0', overflowY: 'auto' }}>
         {(seccionAdmin && (esAdmin || esDirector) ? NAV_ADMIN : NAV_CANTANTE).map(item => {
           const activo = isActive(item.ruta)
           return (
@@ -110,26 +118,61 @@ export default function Sidebar({ seccionAdmin, toggleAdmin, onNavegar }) {
         })}
       </nav>
 
+      {/* Footer */}
       <div style={{ padding: '12px 14px', borderTop: '1px solid rgba(255,255,255,0.1)', position: 'sticky', bottom: 0, background: '#0A4A3A' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-          <div style={{ width: '30px', height: '30px', borderRadius: '50%', background: '#1D9E75', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: '600', color: 'white' }}>
+
+        {/* Popup ayuda instalar */}
+        {mostrarAyuda && (
+          <div style={{
+            background: '#0F6E56', borderRadius: '10px', padding: '12px 14px',
+            marginBottom: '10px', position: 'relative',
+            border: '1px solid rgba(255,255,255,0.15)',
+          }}>
+            <button onClick={() => setMostrarAyuda(false)}
+              style={{ position: 'absolute', top: '6px', right: '8px', background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', cursor: 'pointer', fontSize: '14px', lineHeight: 1 }}>
+              ✕
+            </button>
+            <div style={{ fontSize: '11px', color: '#FFFFFF', fontWeight: '600', marginBottom: '5px' }}>
+              📲 Instalá la app
+            </div>
+            <div style={{ fontSize: '11px', color: 'rgba(159,225,203,0.85)', lineHeight: '1.6' }}>
+              Tocá los <strong style={{ color: '#FFFFFF' }}>⋮</strong> de Chrome y elegí <strong style={{ color: '#FFFFFF' }}>"Agregar a pantalla de inicio"</strong>
+            </div>
+          </div>
+        )}
+
+        {/* Nombre + ayuda */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+          <div style={{ width: '30px', height: '30px', borderRadius: '50%', background: '#1D9E75', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: '600', color: 'white', flexShrink: 0 }}>
             {iniciales}
           </div>
-          <div>
-            <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.9)', fontWeight: '500' }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.9)', fontWeight: '500', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {perfil?.nombre?.split(' ')[0] || '—'}
             </div>
             <div style={{ fontSize: '10px', color: 'rgba(159,225,203,0.6)', textTransform: 'capitalize' }}>
               {perfil?.voz || perfil?.rol || '—'}
             </div>
           </div>
+          {/* Botón ? */}
+          <button onClick={() => setMostrarAyuda(v => !v)}
+            style={{
+              width: '24px', height: '24px', borderRadius: '50%',
+              background: mostrarAyuda ? '#1D9E75' : 'rgba(255,255,255,0.1)',
+              border: '1px solid rgba(255,255,255,0.2)',
+              color: 'rgba(255,255,255,0.7)', cursor: 'pointer',
+              fontSize: '12px', fontWeight: '600', flexShrink: 0,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+            ?
+          </button>
         </div>
+
         <button onClick={cerrarSesion}
           style={{ width: '100%', padding: '6px', fontSize: '11px', color: 'rgba(255,255,255,0.45)', background: 'none', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', cursor: 'pointer' }}>
           Cerrar sesión
         </button>
       </div>
-
     </div>
   )
 }
