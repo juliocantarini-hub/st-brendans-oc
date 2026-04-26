@@ -46,18 +46,16 @@ export default function Sidebar({ seccionAdmin, toggleAdmin, onNavegar }) {
     ? perfil.nombre.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase()
     : '?'
 
-  function isActive(ruta, esMenuAdmin) {
-    if (esMenuAdmin) {
-      // En modo admin solo activamos rutas /admin/...
-      if (ruta === '/admin') return location.pathname === '/admin'
-      return location.pathname.startsWith(ruta)
-    } else {
-      // En modo cantante solo activamos rutas que NO sean /admin/...
-      if (location.pathname.startsWith('/admin')) return false
-      if (ruta === '/') return location.pathname === '/'
-      return location.pathname.startsWith(ruta)
-    }
+function isActive(ruta, esMenuAdmin) {
+  if (esMenuAdmin) {
+    if (ruta === '/admin') return location.pathname === '/admin'
+    return location.pathname.startsWith(ruta)
+  } else {
+    if (location.pathname.startsWith('/admin')) return false
+    if (ruta === '/') return location.pathname === '/'
+    return location.pathname.startsWith(ruta)
   }
+}
 
   function handleNavegar(ruta) {
     navigate(ruta)
