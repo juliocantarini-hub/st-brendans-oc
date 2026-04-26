@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { useEventos, formatHora, diasRestantes } from '../hooks/useEventos'
@@ -6,6 +7,26 @@ import { useAvisos, tiempoRelativo, TIPO_AVISO } from '../hooks/useAvisos'
 import { useArticulos } from '../hooks/useBlog'
 
 export default function Inicio() {
+  const [pwaPrompt, setPwaPrompt] = useState(null)
+  const [pwaInstalada, setPwaInstalada] = useState(false)
+
+  useEffect(() => {
+    const handlerInstall = (e) => {
+      e.preventDefault()
+      setPwaPrompt(e)
+    }
+    const handlerInstalled = () => {
+      setPwaInstalada(true)
+      setPwaPrompt(null)
+    }
+    window.addEventListener('beforeinstallprompt', handlerInstall)
+    window.addEventListener('appinstalled', handlerInstalled)
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handlerInstall)
+      window.removeEventListener('appinstalled', handlerInstalled)
+    }
+  }, [])
+
   const navigate = useNavigate()
   const { perfil } = useAuth()
 
@@ -17,11 +38,39 @@ export default function Inicio() {
   const proximoEvento = eventos[0]
   const obrasEstudio  = obras.filter(o => o.estado === 'estudio' || o.estado === 'concierto').slice(0, 3)
   const avisosRecientes = avisos.slice(0, 3)
-
   const diasProx = proximoEvento ? diasRestantes(proximoEvento.fecha_inicio) : null
 
   return (
     <div>
+      {/* Botón instalar PWA */}
+      {pwaPrompt && !pwaInstalada && (
+        <div style={{
+          background: '#0A4A3A', borderRadius: '12px', padding: '12px 16px',
+          marginBottom: '16px', display: 'flex', alignItems: 'center',
+          justifyContent: 'space-between', gap: '12px',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <span style={{ fontSize: '24px' }}>📲</span>
+            <div>
+              <div style={{ fontSize: '13px', fontWeight: '500', color: '#FFFFFF' }}>Instalá la app</div>
+              <div style={{ fontSize: '11px', color: 'rgba(159,225,203,0.7)' }}>Accedé más rápido desde tu celular</div>
+            </div>
+          </div>
+          <button onClick={async () => {
+            if (pwaPrompt) {
+              await pwaPrompt.prompt()
+              setPwaPrompt(null)
+            }
+          }} style={{
+            background: '#1D9E75', color: '#FFFFFF', border: 'none',
+            borderRadius: '8px', padding: '8px 14px', fontSize: '12px',
+            cursor: 'pointer', fontWeight: '500', flexShrink: 0,
+          }}>
+            Instalar
+          </button>
+        </div>
+      )}
+
       {/* Banner de bienvenida */}
       <div style={{
         background: 'linear-gradient(135deg, #0A4A3A 0%, #0F6E56 100%)',
@@ -56,57 +105,32 @@ export default function Inicio() {
 
       {/* Stats rápidas */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '24px' }}>
-        <StatCard
-          val={obras.length} label="Obras en repertorio"
-          color="#0F6E56" bg="#E1F5EE"
-          onClick={() => navigate('/repertorio')}
-        />
-        <StatCard
-          val={noLeidos} label={noLeidos === 1 ? 'Aviso sin leer' : 'Avisos sin leer'}
-          color={noLeidos > 0 ? '#D85A30' : '#888780'}
-          bg={noLeidos > 0 ? '#FAECE7' : '#F1EFE8'}
-          onClick={() => navigate('/avisos')}
-        />
-        <StatCard
-          val={eventos.length} label="Eventos próximos"
-          color="#378ADD" bg="#E6F1FB"
-          onClick={() => navigate('/calendario')}
-        />
+        <StatCard val={obras.length} label="Obras en repertorio" color="#0F6E56" bg="#E1F5EE" onClick={() => navigate('/repertorio')} />
+        <StatCard val={noLeidos} label={noLeidos === 1 ? 'Aviso sin leer' : 'Avisos sin leer'} color={noLeidos > 0 ? '#D85A30' : '#888780'} bg={noLeidos > 0 ? '#FAECE7' : '#F1EFE8'} onClick={() => navigate('/avisos')} />
+        <StatCard val={eventos.length} label="Eventos próximos" color="#378ADD" bg="#E6F1FB" onClick={() => navigate('/calendario')} />
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: window.innerWidth <= 768 ? '1fr' : '1fr 1fr', gap: '16px' }}>
-        {/* Obras para estudiar */}
         <Seccion titulo="Estudia esta semana" linkLabel="Ver todo" onLink={() => navigate('/repertorio')}>
-          {obrasEstudio.length === 0 ? (
-            <Vacio texto="No hay obras activas." />
-          ) : obrasEstudio.map(obra => (
+          {obrasEstudio.length === 0 ? <Vacio texto="No hay obras activas." /> : obrasEstudio.map(obra => (
             <ItemObra key={obra.id} obra={obra} onClick={() => navigate(`/repertorio/${obra.id}`)} vozUsuario={perfil?.voz} />
           ))}
         </Seccion>
 
-        {/* Avisos recientes */}
         <Seccion titulo="Últimos avisos" linkLabel="Ver todos" onLink={() => navigate('/avisos')}>
-          {avisosRecientes.length === 0 ? (
-            <Vacio texto="Sin avisos recientes." />
-          ) : avisosRecientes.map(aviso => (
+          {avisosRecientes.length === 0 ? <Vacio texto="Sin avisos recientes." /> : avisosRecientes.map(aviso => (
             <ItemAviso key={aviso.id} aviso={aviso} />
           ))}
         </Seccion>
 
-        {/* Próximos eventos */}
         <Seccion titulo="Próximos eventos" linkLabel="Ver calendario" onLink={() => navigate('/calendario')}>
-          {eventos.length === 0 ? (
-            <Vacio texto="No hay eventos próximos." />
-          ) : eventos.slice(0, 3).map(ev => (
+          {eventos.length === 0 ? <Vacio texto="No hay eventos próximos." /> : eventos.slice(0, 3).map(ev => (
             <ItemEvento key={ev.id} evento={ev} onClick={() => navigate(`/calendario/${ev.id}`)} />
           ))}
         </Seccion>
 
-        {/* Blog */}
-        <Seccion titulo="Recurso coral" linkLabel="Ver blog" onLink={() => navigate('/blog')}>
-          {articulos.length === 0 ? (
-            <Vacio texto="No hay artículos aún." />
-          ) : articulos.map(art => (
+        <Seccion titulo="Textos" linkLabel="Ver textos" onLink={() => navigate('/blog')}>
+          {articulos.length === 0 ? <Vacio texto="No hay textos aún." /> : articulos.map(art => (
             <ItemBlog key={art.id} articulo={art} onClick={() => navigate(`/blog/${art.id}`)} />
           ))}
         </Seccion>
@@ -115,16 +139,11 @@ export default function Inicio() {
   )
 }
 
-// ── Sub-componentes ───────────────────────────────────────────────────────────
 function StatCard({ val, label, color, bg, onClick }) {
   return (
-    <div onClick={onClick} style={{
-      background: bg, borderRadius: '12px', padding: '16px',
-      cursor: 'pointer', transition: 'transform 0.12s',
-    }}
+    <div onClick={onClick} style={{ background: bg, borderRadius: '12px', padding: '16px', cursor: 'pointer', transition: 'transform 0.12s' }}
       onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-1px)'}
-      onMouseLeave={e => e.currentTarget.style.transform = 'none'}
-    >
+      onMouseLeave={e => e.currentTarget.style.transform = 'none'}>
       <div style={{ fontSize: '28px', fontWeight: '600', color, lineHeight: 1 }}>{val}</div>
       <div style={{ fontSize: '12px', color, opacity: 0.8, marginTop: '4px' }}>{label}</div>
     </div>
@@ -135,12 +154,8 @@ function Seccion({ titulo, linkLabel, onLink, children }) {
   return (
     <div style={{ background: '#FFFFFF', borderRadius: '14px', padding: '18px', border: '1px solid #E8E6DF' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-        <h3 style={{ fontSize: '13px', fontWeight: '600', color: '#5F5E5A', textTransform: 'uppercase', letterSpacing: '0.5px', margin: 0 }}>
-          {titulo}
-        </h3>
-        <button onClick={onLink} style={{ fontSize: '12px', color: '#0F6E56', background: 'none', border: 'none', cursor: 'pointer', fontWeight: '500' }}>
-          {linkLabel} →
-        </button>
+        <h3 style={{ fontSize: '13px', fontWeight: '600', color: '#5F5E5A', textTransform: 'uppercase', letterSpacing: '0.5px', margin: 0 }}>{titulo}</h3>
+        <button onClick={onLink} style={{ fontSize: '12px', color: '#0F6E56', background: 'none', border: 'none', cursor: 'pointer', fontWeight: '500' }}>{linkLabel} →</button>
       </div>
       {children}
     </div>
@@ -194,9 +209,7 @@ function ItemEvento({ evento, onClick }) {
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: '13px', fontWeight: '500', color: '#1A1A18', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{evento.titulo}</div>
-        <div style={{ fontSize: '11px', color: '#888780' }}>
-          {formatHora(evento.fecha_inicio)}{evento.lugar ? ` · ${evento.lugar}` : ''}
-        </div>
+        <div style={{ fontSize: '11px', color: '#888780' }}>{formatHora(evento.fecha_inicio)}{evento.lugar ? ` · ${evento.lugar}` : ''}</div>
       </div>
     </div>
   )
@@ -210,9 +223,7 @@ function ItemBlog({ articulo, onClick }) {
       </svg>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: '13px', fontWeight: '500', color: '#1A1A18', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{articulo.titulo}</div>
-        <div style={{ fontSize: '11px', color: '#888780' }}>
-          {new Date(articulo.creado_en).toLocaleDateString('es-AR', { day: 'numeric', month: 'short' })}
-        </div>
+        <div style={{ fontSize: '11px', color: '#888780' }}>{new Date(articulo.creado_en).toLocaleDateString('es-AR', { day: 'numeric', month: 'short' })}</div>
       </div>
     </div>
   )
