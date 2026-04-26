@@ -115,7 +115,7 @@ export default function Login() {
         textAlign: 'center', fontSize: '12px',
         color: '#B4B2A9', marginTop: '16px', marginBottom: 0,
       }}>
-        ¿Necesitás ayuda? Contactá a la administración del coro.
+        ¿Necesitás ayuda? Contactá a tu director.
       </p>
     </AuthLayout>
   )
