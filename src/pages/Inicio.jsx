@@ -19,7 +19,7 @@ export default function Inicio() {
       setPwaInstalada(true)
       setPwaPrompt(null)
     }
-    window.addEventListener('beforeinstallprompt', handlerInstall)
+    if ('serviceWorker' in navigator) {     navigator.serviceWorker.register('/sw.js').catch(() => {})   }   window.addEventListener('beforeinstallprompt', handlerInstall)
     window.addEventListener('appinstalled', handlerInstalled)
     return () => {
       window.removeEventListener('beforeinstallprompt', handlerInstall)
