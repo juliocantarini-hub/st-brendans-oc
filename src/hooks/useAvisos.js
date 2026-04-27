@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 
-// ─── Hook: avisos del cantante con estado leído/no leído ──────────────────────
 export function useAvisos(filtros = {}) {
   const [avisos, setAvisos]     = useState([])
   const [cargando, setCargando] = useState(true)
@@ -14,12 +13,7 @@ export function useAvisos(filtros = {}) {
     try {
       let query = supabase
         .from('avisos')
-        .select(`
-          *,
-          avisos_leidos!left(leido_en, perfil_id),
-          obras(id, titulo),
-          eventos(id, titulo)
-        `)
+        .select(`*, avisos_leidos!left(leido_en, perfil_id), obras(id, titulo), eventos(id, titulo)`)
         .eq('publicado', true)
         .order('creado_en', { ascending: false })
 
@@ -47,7 +41,6 @@ export function useAvisos(filtros = {}) {
   return { avisos, cargando, error, noLeidos, recargar: cargar }
 }
 
-// ─── Marcar aviso como leído ──────────────────────────────────────────────────
 export async function marcarLeido(avisoId, perfilId) {
   const { error } = await supabase
     .from('avisos_leidos')
@@ -58,7 +51,6 @@ export async function marcarLeido(avisoId, perfilId) {
   return { ok: !error }
 }
 
-// ─── Marcar todos los avisos como leídos ─────────────────────────────────────
 export async function marcarTodosLeidos(avisoIds, perfilId) {
   if (!avisoIds.length) return { ok: true }
   const rows = avisoIds.map(aviso_id => ({ aviso_id, perfil_id: perfilId }))
@@ -68,7 +60,6 @@ export async function marcarTodosLeidos(avisoIds, perfilId) {
   return { ok: !error }
 }
 
-// ─── Hook: avisos para admin ──────────────────────────────────────────────────
 export function useAvisosAdmin() {
   const [avisos, setAvisos]     = useState([])
   const [cargando, setCargando] = useState(true)
@@ -78,7 +69,7 @@ export function useAvisosAdmin() {
     setCargando(true)
     const { data, error: err } = await supabase
       .from('avisos')
-      .select(`*, obras(titulo), eventos(titulo), avisos_leidos(perfil_id)`)
+      .select('*, obras(titulo), eventos(titulo), avisos_leidos(perfil_id)')
       .order('creado_en', { ascending: false })
     if (err) { setError(err.message); setCargando(false); return }
     setAvisos(data || [])
@@ -89,7 +80,6 @@ export function useAvisosAdmin() {
   return { avisos, cargando, error, recargar: cargar }
 }
 
-// ─── CRUD de avisos (admin) ───────────────────────────────────────────────────
 export async function crearAviso(datos) {
   const { data, error } = await supabase
     .from('avisos')
@@ -100,11 +90,16 @@ export async function crearAviso(datos) {
 }
 
 export async function actualizarAviso(id, datos) {
-const { data, error } = await supabase.from('avisos').update(datos).eq('id', id).select().single()
-return { ok: !error, data, error: error?.message }
+  const { data, error } = await supabase
+    .from('avisos')
+    .update(datos)
+    .eq('id', id)
+    .select()
+    .single()
+  return { ok: !error, data, error: error?.message }
 }
 
-export async function publicarAviso(id, publicado) {`
+export async function publicarAviso(id, publicado) {
   const { error } = await supabase
     .from('avisos')
     .update({ publicado })
@@ -117,7 +112,6 @@ export async function eliminarAviso(id) {
   return { ok: !error, error: error?.message }
 }
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
 export function tiempoRelativo(iso) {
   if (!iso) return ''
   const diff = Date.now() - new Date(iso).getTime()
