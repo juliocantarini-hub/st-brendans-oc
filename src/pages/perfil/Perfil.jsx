@@ -10,14 +10,14 @@ export default function Perfil() {
     nombre: '', telefono: '', voz: '',
     fecha_nacimiento: '', dni: '', mail: ''
   })
-  const [notifApp, setNotifApp]     = useState(true)
-  const [notifEmail, setNotifEmail] = useState(true)
   const [guardando, setGuardando]   = useState(false)
   const [mensaje, setMensaje]       = useState('')
   const [errorMsg, setErrorMsg]     = useState('')
   const [cambioPass, setCambioPass] = useState(false)
   const [nuevaPass, setNuevaPass]   = useState('')
   const [confirmaPass, setConfirmaPass] = useState('')
+  const [verNueva, setVerNueva]     = useState(false)
+  const [verConfirma, setVerConfirma] = useState(false)
   const [guardandoPass, setGuardandoPass] = useState(false)
   const [mensajePass, setMensajePass] = useState('')
   const [errorPass, setErrorPass]   = useState('')
@@ -62,7 +62,12 @@ export default function Perfil() {
     setGuardandoPass(true)
     const { ok } = await actualizarContrasena(nuevaPass)
     setGuardandoPass(false)
-    if (ok) { setMensajePass('Contraseña actualizada.'); setNuevaPass(''); setConfirmaPass(''); setCambioPass(false) }
+    if (ok) {
+      setMensajePass('✓ Tu contraseña se actualizó correctamente.')
+      setNuevaPass('')
+      setConfirmaPass('')
+      setTimeout(() => { setMensajePass(''); setCambioPass(false) }, 3000)
+    }
     else setErrorPass('No se pudo actualizar la contraseña.')
   }
 
@@ -124,14 +129,7 @@ export default function Perfil() {
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
               {VOCES.map(v => (
                 <button key={v} type="button" onClick={() => setForm(f => ({ ...f, voz: v }))}
-                  style={{
-                    padding: '6px 14px', borderRadius: '8px', fontSize: '13px', cursor: 'pointer',
-                    border: `1.5px solid ${form.voz === v ? '#1D9E75' : '#D3D1C7'}`,
-                    background: form.voz === v ? '#E1F5EE' : '#FFFFFF',
-                    color: form.voz === v ? '#04342C' : '#5F5E5A',
-                    fontWeight: form.voz === v ? '500' : '400',
-                    textTransform: 'capitalize',
-                  }}>
+                  style={{ padding: '6px 14px', borderRadius: '8px', fontSize: '13px', cursor: 'pointer', border: `1.5px solid ${form.voz === v ? '#1D9E75' : '#D3D1C7'}`, background: form.voz === v ? '#E1F5EE' : '#FFFFFF', color: form.voz === v ? '#04342C' : '#5F5E5A', fontWeight: form.voz === v ? '500' : '400', textTransform: 'capitalize' }}>
                   {v}
                 </button>
               ))}
@@ -157,14 +155,40 @@ export default function Perfil() {
           <form onSubmit={handleCambioPass}>
             {errorPass   && <div style={estilos.alerta('error')}>{errorPass}</div>}
             {mensajePass && <div style={estilos.alerta('exito')}>{mensajePass}</div>}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-              <Campo label="Nueva contraseña">
-                <input type="password" value={nuevaPass} onChange={e => setNuevaPass(e.target.value)} placeholder="Mínimo 6 caracteres" style={estilos.input} autoFocus />
-              </Campo>
-              <Campo label="Confirmá la contraseña">
-                <input type="password" value={confirmaPass} onChange={e => setConfirmaPass(e.target.value)} placeholder="Repetí la contraseña" style={estilos.input} />
-              </Campo>
-            </div>
+
+            <Campo label="Nueva contraseña">
+              <div style={{ position: 'relative' }}>
+                <input
+                  type={verNueva ? 'text' : 'password'}
+                  value={nuevaPass}
+                  onChange={e => setNuevaPass(e.target.value)}
+                  placeholder="Mínimo 6 caracteres"
+                  style={{ ...estilos.input, paddingRight: '40px' }}
+                  autoFocus
+                />
+                <button type="button" onClick={() => setVerNueva(v => !v)}
+                  style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#888780', fontSize: '12px' }}>
+                  {verNueva ? 'Ocultar' : 'Ver'}
+                </button>
+              </div>
+            </Campo>
+
+            <Campo label="Confirmá la contraseña">
+              <div style={{ position: 'relative' }}>
+                <input
+                  type={verConfirma ? 'text' : 'password'}
+                  value={confirmaPass}
+                  onChange={e => setConfirmaPass(e.target.value)}
+                  placeholder="Repetí la contraseña"
+                  style={{ ...estilos.input, paddingRight: '40px' }}
+                />
+                <button type="button" onClick={() => setVerConfirma(v => !v)}
+                  style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#888780', fontSize: '12px' }}>
+                  {verConfirma ? 'Ocultar' : 'Ver'}
+                </button>
+              </div>
+            </Campo>
+
             <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
               <button type="submit" disabled={guardandoPass}
                 style={{ height: '38px', padding: '0 16px', borderRadius: '8px', border: 'none', background: '#0F6E56', color: '#FFFFFF', fontSize: '13px', cursor: 'pointer', fontWeight: '500' }}>
@@ -187,20 +211,6 @@ function Campo({ label, children }) {
     <div style={{ marginBottom: '14px' }}>
       <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', color: '#5F5E5A', marginBottom: '5px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>{label}</label>
       {children}
-    </div>
-  )
-}
-
-function ToggleRow({ label, sub, valor, onChange }) {
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 0', borderBottom: '1px solid #F1EFE8' }}>
-      <div>
-        <div style={{ fontSize: '13px', color: '#1A1A18' }}>{label}</div>
-        <div style={{ fontSize: '11px', color: '#888780', marginTop: '2px' }}>{sub}</div>
-      </div>
-      <button onClick={onChange} style={{ width: '44px', height: '24px', borderRadius: '12px', border: 'none', background: valor ? '#0F6E56' : '#D3D1C7', cursor: 'pointer', position: 'relative', transition: 'background 0.2s', flexShrink: 0 }}>
-        <span style={{ position: 'absolute', top: '3px', left: valor ? '22px' : '3px', width: '18px', height: '18px', borderRadius: '50%', background: '#FFFFFF', transition: 'left 0.2s' }} />
-      </button>
     </div>
   )
 }
