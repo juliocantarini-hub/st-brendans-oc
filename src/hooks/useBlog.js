@@ -120,14 +120,7 @@ export async function eliminarArticulo(id) {
 }
 
 // ─── Categorías ───────────────────────────────────────────────────────────────
-export const CATEGORIAS = [
-  { valor: '', label: 'Todos' },
-  { valor: 'tecnica',   label: 'Técnica vocal' },
-  { valor: 'tecnica', label: 'Textos' },
-  { valor: 'noticias', label: 'Fonética' },
-  { valor: 'formacion', label: 'Otros' },
-  { valor: 'avisos', label: 'Avisos' },
-]
+export const CATEGORIAS = []
 
 export const CATEGORIA_COLOR = {
   tecnica:   { bg: '#E1F5EE', color: '#04342C' },
