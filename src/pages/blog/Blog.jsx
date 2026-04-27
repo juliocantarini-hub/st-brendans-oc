@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import { driveUrlImprimir } from '../../components/drive/DriveComponents'
 import {
   useArticulos, useArticulo,
   CATEGORIAS, CATEGORIA_COLOR
@@ -97,7 +98,6 @@ export function Blog() {
 }
 
 function ArticuloDestacado({ articulo, onClick }) {
-  const cc = CATEGORIA_COLOR[articulo.categoria] || { bg: '#F1EFE8', color: '#5F5E5A' }
   return (
     <div onClick={onClick} style={{
       background: 'linear-gradient(135deg, #0F6E56 0%, #1D9E75 100%)',
@@ -135,7 +135,6 @@ function ArticuloDestacado({ articulo, onClick }) {
 
 function ArticuloCard({ articulo, onClick }) {
   const cc = CATEGORIA_COLOR[articulo.categoria] || { bg: '#F1EFE8', color: '#5F5E5A' }
-  const catLabel = CATEGORIAS.find(c => c.valor === articulo.categoria)?.label
 
   return (
     <div onClick={onClick} style={{
@@ -156,7 +155,6 @@ function ArticuloCard({ articulo, onClick }) {
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: '14px', fontWeight: '500', color: '#1A1A18', marginBottom: '4px' }}>{articulo.titulo}</div>
         <div style={{ fontSize: '12px', color: '#888780', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-          {catLabel && <span style={{ background: cc.bg, color: cc.color, padding: '1px 6px', borderRadius: '8px', fontWeight: '500', fontSize: '10px' }}>{catLabel}</span>}
           {articulo.perfiles?.nombre && <span>{articulo.perfiles.nombre}</span>}
           <span>· {new Date(articulo.creado_en).toLocaleDateString('es-AR', { day: 'numeric', month: 'short' })}</span>
         </div>
@@ -194,9 +192,6 @@ export function ArticuloDetalle() {
     )
   }
 
-  const cc = CATEGORIA_COLOR[articulo.categoria] || { bg: '#F1EFE8', color: '#5F5E5A' }
-  const catLabel = CATEGORIAS.find(c => c.valor === articulo.categoria)?.label
-
   return (
     <div style={{ maxWidth: '780px' }}>
       <button onClick={() => navigate('/blog')} style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#888780', background: 'none', border: 'none', cursor: 'pointer', fontSize: '13px', marginBottom: '20px', padding: 0 }}>
@@ -205,11 +200,6 @@ export function ArticuloDetalle() {
       </button>
 
       <div style={{ marginBottom: '20px' }}>
-        {catLabel && (
-          <span style={{ fontSize: '11px', fontWeight: '600', background: cc.bg, color: cc.color, padding: '3px 10px', borderRadius: '10px', display: 'inline-block', marginBottom: '12px' }}>
-            {catLabel}
-          </span>
-        )}
         <h1 style={{ fontFamily: 'Georgia, serif', fontSize: '26px', fontWeight: 'normal', color: '#1A1A18', margin: '0 0 12px', lineHeight: '1.35' }}>
           {articulo.titulo}
         </h1>
@@ -220,10 +210,19 @@ export function ArticuloDetalle() {
         </div>
       </div>
 
-      {/* Resumen */}
       {articulo.resumen && (
         <div style={{ background: '#F8F7F3', borderLeft: '3px solid #1D9E75', borderRadius: '0 10px 10px 0', padding: '14px 16px', marginBottom: '24px', fontSize: '15px', color: '#3D3D3A', lineHeight: '1.6', fontStyle: 'italic' }}>
           {articulo.resumen}
+        </div>
+      )}
+
+      {/* Botón imprimir */}
+      {articulo.drive_pdf_id && (
+        <div style={{ marginBottom: '12px' }}>
+          <a href={driveUrlImprimir(articulo.drive_pdf_id)} target="_blank" rel="noopener noreferrer"
+            style={{ fontSize: '12px', color: '#5F5E5A', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px', background: '#F1EFE8', padding: '5px 12px', borderRadius: '8px', border: '1px solid #E8E6DF' }}>
+            🖨 Imprimir
+          </a>
         </div>
       )}
 
@@ -231,7 +230,7 @@ export function ArticuloDetalle() {
       {articulo.drive_pdf_id && (
         <div style={{ borderRadius: '12px', overflow: 'hidden', border: '1px solid #E8E6DF', marginBottom: '24px' }}>
           <iframe
-            src={`https://drive.google.com/file/d/${articulo.drive_pdf_id}/preview`}
+            src={'https://drive.google.com/file/d/' + articulo.drive_pdf_id + '/preview'}
             width="100%"
             height="600px"
             allow="autoplay"
@@ -240,7 +239,6 @@ export function ArticuloDetalle() {
         </div>
       )}
 
-      {/* Contenido de texto */}
       {articulo.contenido && (
         <div style={{ fontSize: '15px', color: '#3D3D3A', lineHeight: '1.75', whiteSpace: 'pre-wrap' }}>
           {articulo.contenido}

@@ -9,6 +9,9 @@ export function driveUrlAudio(fileId) {
 export function driveUrlDescarga(fileId) {
   return `https://drive.google.com/uc?export=download&id=${fileId}`
 }
+export function driveUrlImprimir(fileId) {
+  return `https://drive.google.com/file/d/${fileId}/print`
+}
 
 export function DriveVisor({ fileId, titulo = 'Partitura' }) {
   const [estado, setEstado] = useState('cargando')
@@ -39,10 +42,13 @@ export function DriveVisor({ fileId, titulo = 'Partitura' }) {
       {estado === 'ok' && (
         <div style={estilos.pdfFooter}>
           <a href={driveUrlPDF(fileId)} target="_blank" rel="noopener noreferrer" style={estilos.linkBtn}>
-            Abrir en pestaña nueva
+            Abrir ↗
           </a>
           <a href={driveUrlDescarga(fileId)} target="_blank" rel="noopener noreferrer" style={{ ...estilos.linkBtn, color: '#5F5E5A' }}>
-            Descargar PDF
+            Descargar
+          </a>
+          <a href={driveUrlImprimir(fileId)} target="_blank" rel="noopener noreferrer" style={{ ...estilos.linkBtn, color: '#5F5E5A' }}>
+            🖨 Imprimir
           </a>
         </div>
       )}
