@@ -7,17 +7,17 @@ const ESTADOS = [
   { valor: '',          label: 'Todas' },
   { valor: 'concierto', label: 'Próximo concierto' },
   { valor: 'estudio',   label: 'En estudio' },
-  { valor: 'activo',    label: 'Activo' },
+  { valor: 'activo',    label: 'Repertorio activo' },
 ]
 
 const BADGE = {
   estudio:   { bg: '#E1F5EE', color: '#04342C', txt: 'En estudio' },
-  activo:    { bg: '#EAF3DE', color: '#27500A', txt: 'Activo' },
+  activo:    { bg: '#EAF3DE', color: '#27500A', txt: 'Repertorio activo' },
   concierto: { bg: '#FAECE7', color: '#712B13', txt: 'Próximo concierto' },
   archivado: { bg: '#F1EFE8', color: '#888780', txt: 'Archivado' },
 }
 
-const ORDEN_ESTADO = { concierto: 0, activo: 1, estudio: 2, archivado: 3 }
+const ORDEN_ESTADO = { concierto: 0, estudio: 1, activo: 2, archivado: 3 }
 
 function Badge({ estado }) {
   const b = BADGE[estado] || BADGE.archivado
@@ -53,7 +53,6 @@ export default function Repertorio() {
   const { perfil } = useAuth()
   const [busqueda, setBusqueda] = useState('')
   const [estadoFiltro, setEstadoFiltro] = useState('')
-  const [vozFiltro, setVozFiltro] = useState(false)
 
   const { obras, cargando, error, recargar } = useObras({
     estado: estadoFiltro || undefined,
@@ -61,19 +60,12 @@ export default function Repertorio() {
   })
 
   const obrasFiltradas = useMemo(() => {
-    let lista = vozFiltro && perfil?.voz
-      ? obras.filter(o => o[`drive_audio_${perfil.voz}`])
-      : obras
-
-    // Ordenar: Próximo concierto primero
-    lista = [...lista].sort((a, b) => {
+    return [...obras].sort((a, b) => {
       const oa = ORDEN_ESTADO[a.estado] ?? 99
       const ob = ORDEN_ESTADO[b.estado] ?? 99
       return oa - ob
     })
-
-    return lista
-  }, [obras, vozFiltro, perfil?.voz])
+  }, [obras])
 
   return (
     <div>
@@ -112,18 +104,6 @@ export default function Repertorio() {
             {e.label}
           </button>
         ))}
-        {perfil?.voz && (
-          <button onClick={() => setVozFiltro(v => !v)}
-            style={{
-              padding: '4px 12px', borderRadius: '20px', fontSize: '12px', cursor: 'pointer',
-              border: `1px solid ${vozFiltro ? '#D85A30' : '#D3D1C7'}`,
-              background: vozFiltro ? '#FAECE7' : 'none',
-              color: vozFiltro ? '#712B13' : '#5F5E5A',
-              fontWeight: vozFiltro ? '500' : '400',
-            }}>
-            Solo mi voz ({perfil.voz})
-          </button>
-        )}
       </div>
 
       {error && (
@@ -148,7 +128,7 @@ export default function Repertorio() {
             <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
           </svg>
           <p style={{ fontSize: '14px', margin: '0 0 8px' }}>No hay obras que coincidan.</p>
-          <button onClick={() => { setBusqueda(''); setEstadoFiltro(''); setVozFiltro(false) }}
+          <button onClick={() => { setBusqueda(''); setEstadoFiltro('') }}
             style={{ fontSize: '12px', color: '#0F6E56', background: 'none', border: 'none', cursor: 'pointer', fontWeight: '500' }}>
             Limpiar filtros
           </button>
