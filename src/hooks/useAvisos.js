@@ -99,7 +99,12 @@ export async function crearAviso(datos) {
   return { ok: !error, data, error: error?.message }
 }
 
-export async function publicarAviso(id, publicado) {
+export async function actualizarAviso(id, datos) {
+const { data, error } = await supabase.from('avisos').update(datos).eq('id', id).select().single()
+return { ok: !error, data, error: error?.message }
+}
+
+export async function publicarAviso(id, publicado) {`
   const { error } = await supabase
     .from('avisos')
     .update({ publicado })

@@ -1,18 +1,18 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
-import { crearAviso, publicarAviso, eliminarAviso, useAvisosAdmin, tiempoRelativo, TIPO_AVISO } from '../../hooks/useAvisos'
+import { crearAviso, actualizarAviso, publicarAviso, eliminarAviso, useAvisosAdmin, tiempoRelativo, TIPO_AVISO } from '../../hooks/useAvisos'
 
 function useEsMovil() {
   return window.innerWidth <= 768
 }
 
 export function AvisosAdmin() {
-  const navigate = useNavigate()
   const { avisos, cargando, error, recargar } = useAvisosAdmin()
   const [procesando, setProcesando] = useState(null)
   const [confirmEliminar, setConfirmEliminar] = useState(null)
   const [mostrarForm, setMostrarForm] = useState(false)
+  const [editando, setEditando] = useState(null)
   const esMovil = useEsMovil()
 
   async function togglePublicar(aviso) {
@@ -30,8 +30,12 @@ export function AvisosAdmin() {
     setProcesando(null)
   }
 
-  if (mostrarForm) {
-    return <NuevoAvisoForm onGuardar={() => { setMostrarForm(false); recargar() }} onCancelar={() => setMostrarForm(false)} />
+  if (mostrarForm || editando) {
+    return <AvisoForm
+      aviso={editando}
+      onGuardar={() => { setMostrarForm(false); setEditando(null); recargar() }}
+      onCancelar={() => { setMostrarForm(false); setEditando(null) }}
+    />
   }
 
   return (
@@ -91,10 +95,16 @@ export function AvisosAdmin() {
                       {aviso.publicado ? 'Publicado' : 'Borrador'}
                     </span>
                   </div>
-                  <button onClick={() => setConfirmEliminar(aviso)}
-                    style={{ padding: '5px 8px', fontSize: '12px', borderRadius: '6px', border: '1px solid #F0C5B4', background: 'none', cursor: 'pointer', color: '#A32D2D' }}>
-                    ✕
-                  </button>
+                  <div style={{ display: 'flex', gap: '6px' }}>
+                    <button onClick={() => setEditando(aviso)}
+                      style={{ padding: '5px 12px', fontSize: '12px', borderRadius: '6px', border: '1px solid #D3D1C7', background: 'none', cursor: 'pointer', color: '#0F6E56', fontWeight: '500' }}>
+                      Editar
+                    </button>
+                    <button onClick={() => setConfirmEliminar(aviso)}
+                      style={{ padding: '5px 8px', fontSize: '12px', borderRadius: '6px', border: '1px solid #F0C5B4', background: 'none', cursor: 'pointer', color: '#A32D2D' }}>
+                      ✕
+                    </button>
+                  </div>
                 </div>
               </div>
             )
@@ -105,7 +115,7 @@ export function AvisosAdmin() {
       {/* DESKTOP: tabla */}
       {!cargando && !esMovil && (
         <div style={{ background: '#FFFFFF', border: '1px solid #E8E6DF', borderRadius: '12px', overflow: 'hidden' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 100px 80px 90px 90px', padding: '10px 16px', background: '#F8F7F3', borderBottom: '1px solid #E8E6DF', fontSize: '11px', fontWeight: '600', color: '#888780', textTransform: 'uppercase', letterSpacing: '0.4px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 100px 80px 90px 110px', padding: '10px 16px', background: '#F8F7F3', borderBottom: '1px solid #E8E6DF', fontSize: '11px', fontWeight: '600', color: '#888780', textTransform: 'uppercase', letterSpacing: '0.4px' }}>
             <span>Aviso</span><span>Tipo</span><span>Lecturas</span>
             <span style={{ textAlign: 'center' }}>Publicado</span>
             <span style={{ textAlign: 'right' }}>Acciones</span>
@@ -117,7 +127,7 @@ export function AvisosAdmin() {
             const tc = TIPO_AVISO[aviso.tipo] || TIPO_AVISO.material
             const lecturas = aviso.avisos_leidos?.length || 0
             return (
-              <div key={aviso.id} style={{ display: 'grid', gridTemplateColumns: '1fr 100px 80px 90px 90px', padding: '12px 16px', alignItems: 'center', borderBottom: i < avisos.length - 1 ? '1px solid #F1EFE8' : 'none', opacity: procesando === aviso.id ? 0.5 : 1 }}>
+              <div key={aviso.id} style={{ display: 'grid', gridTemplateColumns: '1fr 100px 80px 90px 110px', padding: '12px 16px', alignItems: 'center', borderBottom: i < avisos.length - 1 ? '1px solid #F1EFE8' : 'none', opacity: procesando === aviso.id ? 0.5 : 1 }}>
                 <div>
                   <div style={{ fontSize: '13px', fontWeight: '500', color: '#1A1A18' }}>{aviso.titulo}</div>
                   <div style={{ fontSize: '11px', color: '#888780', marginTop: '2px' }}>{tiempoRelativo(aviso.creado_en)}</div>
@@ -131,6 +141,10 @@ export function AvisosAdmin() {
                   </button>
                 </div>
                 <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
+                  <button onClick={() => setEditando(aviso)}
+                    style={{ padding: '4px 10px', fontSize: '12px', borderRadius: '6px', border: '1px solid #D3D1C7', background: 'none', cursor: 'pointer', color: '#0F6E56', fontWeight: '500' }}>
+                    Editar
+                  </button>
                   <button onClick={() => setConfirmEliminar(aviso)}
                     style={{ padding: '4px 8px', fontSize: '12px', borderRadius: '6px', border: '1px solid #F0C5B4', background: 'none', cursor: 'pointer', color: '#A32D2D' }}>✕</button>
                 </div>
@@ -158,10 +172,17 @@ export function AvisosAdmin() {
   )
 }
 
-function NuevoAvisoForm({ onGuardar, onCancelar }) {
+function AvisoForm({ aviso, onGuardar, onCancelar }) {
+  const esEdicion = !!aviso
   const [obras, setObras] = useState([])
   const [eventos, setEventos] = useState([])
-  const [form, setForm] = useState({ titulo: '', cuerpo: '', tipo: 'material', obra_id: '', evento_id: '' })
+  const [form, setForm] = useState({
+    titulo: aviso?.titulo || '',
+    cuerpo: aviso?.cuerpo || '',
+    tipo: aviso?.tipo || 'material',
+    obra_id: aviso?.obra_id || '',
+    evento_id: aviso?.evento_id || '',
+  })
   const [errores, setErrores] = useState({})
   const [guardando, setGuardando] = useState(false)
   const [errorGlobal, setErrorGlobal] = useState('')
@@ -185,7 +206,14 @@ function NuevoAvisoForm({ onGuardar, onCancelar }) {
       evento_id: form.evento_id || null,
       publicado: publicar,
     }
-    const { ok, error } = await crearAviso(datos)
+    let ok, error
+    if (esEdicion) {
+      const res = await actualizarAviso(aviso.id, datos)
+      ok = res.ok; error = res.error
+    } else {
+      const res = await crearAviso(datos)
+      ok = res.ok; error = res.error
+    }
     setGuardando(false)
     if (!ok) { setErrorGlobal(error); return }
     onGuardar()
@@ -198,7 +226,9 @@ function NuevoAvisoForm({ onGuardar, onCancelar }) {
           <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
           Volver
         </button>
-        <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '20px', fontWeight: 'normal', color: '#1A1A18', margin: 0 }}>Nuevo aviso</h2>
+        <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '20px', fontWeight: 'normal', color: '#1A1A18', margin: 0 }}>
+          {esEdicion ? 'Editar aviso' : 'Nuevo aviso'}
+        </h2>
       </div>
 
       {errorGlobal && <div style={{ background: '#FCEBEB', border: '1px solid #E24B4A', borderRadius: '8px', padding: '12px', fontSize: '13px', color: '#501313', marginBottom: '16px' }}>{errorGlobal}</div>}
@@ -219,8 +249,8 @@ function NuevoAvisoForm({ onGuardar, onCancelar }) {
       </Campo>
 
       <Campo label="Descripción (opcional)">
-        <textarea value={form.cuerpo} onChange={set('cuerpo')} placeholder="Detalles del aviso..." rows={3}
-          style={{ ...inputStyle, height: 'auto', padding: '10px 12px', resize: 'vertical' }} />
+        <textarea value={form.cuerpo} onChange={set('cuerpo')} placeholder="Detalles del aviso..." rows={4}
+          style={{ ...inputStyle, height: 'auto', padding: '10px 12px', resize: 'vertical', lineHeight: '1.6' }} />
       </Campo>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -245,7 +275,7 @@ function NuevoAvisoForm({ onGuardar, onCancelar }) {
         </button>
         <button onClick={() => guardar(true)} disabled={guardando}
           style={{ flex: 2, height: '42px', borderRadius: '8px', border: 'none', background: guardando ? '#9FE1CB' : '#0F6E56', color: '#FFFFFF', fontSize: '14px', cursor: 'pointer', fontWeight: '500' }}>
-          {guardando ? 'Publicando...' : 'Publicar ahora'}
+          {guardando ? 'Guardando...' : esEdicion ? 'Guardar cambios' : 'Publicar ahora'}
         </button>
       </div>
     </div>
