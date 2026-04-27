@@ -1,7 +1,8 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useEventos, formatFecha, formatHora, diasRestantes } from '../../hooks/useEventos'
 import { useAuth } from '../../hooks/useAuth'
+import { supabase } from '../../lib/supabase'
 
 const TIPOS = [
   { valor: '',          label: 'Todos' },
@@ -26,10 +27,11 @@ export default function Calendario() {
   const { perfil } = useAuth()
   const hoy        = new Date()
 
-  const [vista, setVista]         = useState('lista')   // 'mes' | 'lista'
+  const [vista, setVista]           = useState('lista')
   const [tipoFiltro, setTipoFiltro] = useState('')
-  const [mes, setMes]             = useState(hoy.getMonth())
-  const [anio, setAnio]           = useState(hoy.getFullYear())
+  const [mes, setMes]               = useState(hoy.getMonth())
+  const [anio, setAnio]             = useState(hoy.getFullYear())
+  const [cantantes, setCantantes]   = useState([])
 
   const { eventos, cargando, error, recargar } = useEventos({
     tipo: tipoFiltro || undefined,
@@ -38,25 +40,45 @@ export default function Calendario() {
     anio: vista === 'mes' ? anio : undefined,
   })
 
-  // ── Construir grilla del mes ──────────────────────────────────────────────
+  // Cargar cantantes para mostrar cumpleaños
+  useEffect(() => {
+    supabase
+      .from('perfiles')
+      .select('id, nombre, fecha_nacimiento')
+      .eq('estado', 'activo')
+      .not('fecha_nacimiento', 'is', null)
+      .then(({ data }) => setCantantes(data || []))
+  }, [])
+
+  // Cumpleaños por día del mes actual
+  const cumpleaniosPorDia = useMemo(() => {
+    const map = {}
+    cantantes.forEach(c => {
+      if (!c.fecha_nacimiento) return
+      const nac = new Date(c.fecha_nacimiento + 'T12:00:00')
+      if (nac.getMonth() === mes) {
+        const dia = nac.getDate()
+        const key = `${anio}-${String(mes + 1).padStart(2, '0')}-${String(dia).padStart(2, '0')}`
+        if (!map[key]) map[key] = []
+        map[key].push(c)
+      }
+    })
+    return map
+  }, [cantantes, mes, anio])
+
   const celdasMes = useMemo(() => {
     const primerDia = new Date(anio, mes, 1)
     const ultimoDia = new Date(anio, mes + 1, 0)
-    // lunes=0 … domingo=6
     let offset = primerDia.getDay() - 1
     if (offset < 0) offset = 6
-
     const celdas = []
-    // Días del mes anterior
     for (let i = offset - 1; i >= 0; i--) {
       const d = new Date(anio, mes, -i)
       celdas.push({ fecha: d, mesActual: false })
     }
-    // Días del mes actual
     for (let d = 1; d <= ultimoDia.getDate(); d++) {
       celdas.push({ fecha: new Date(anio, mes, d), mesActual: true })
     }
-    // Completar hasta 42 celdas (6 semanas)
     while (celdas.length < 42) {
       const ultimo = celdas[celdas.length - 1].fecha
       const sig = new Date(ultimo)
@@ -66,7 +88,6 @@ export default function Calendario() {
     return celdas
   }, [mes, anio])
 
-  // Mapear eventos por fecha (YYYY-MM-DD)
   const eventosPorDia = useMemo(() => {
     const map = {}
     eventos.forEach(ev => {
@@ -90,7 +111,6 @@ export default function Calendario() {
     return fecha.toDateString() === hoy.toDateString()
   }
 
-  // ── Asistencia del usuario en un evento ──────────────────────────────────
   function miAsistencia(evento) {
     if (!perfil) return 'pendiente'
     const a = evento.asistencias?.find(a => a.perfil_id === perfil.id)
@@ -99,7 +119,6 @@ export default function Calendario() {
 
   return (
     <div>
-      {/* Cabecera */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '10px' }}>
         <div>
           <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '22px', fontWeight: 'normal', color: '#1A1A18', margin: '0 0 2px' }}>
@@ -109,7 +128,6 @@ export default function Calendario() {
             {cargando ? 'Cargando...' : `${eventos.length} evento${eventos.length !== 1 ? 's' : ''}`}
           </p>
         </div>
-        {/* Toggle vista */}
         <div style={{ display: 'flex', border: '1px solid #D3D1C7', borderRadius: '8px', overflow: 'hidden' }}>
           {['lista', 'mes'].map(v => (
             <button key={v} onClick={() => setVista(v)} style={{
@@ -123,7 +141,6 @@ export default function Calendario() {
         </div>
       </div>
 
-      {/* Filtros de tipo */}
       <div style={{ display: 'flex', gap: '6px', marginBottom: '16px', flexWrap: 'wrap' }}>
         {TIPOS.map(t => (
           <button key={t.valor} onClick={() => setTipoFiltro(t.valor)} style={{
@@ -138,7 +155,6 @@ export default function Calendario() {
         ))}
       </div>
 
-      {/* Error */}
       {error && (
         <div style={{ background: '#FCEBEB', border: '1px solid #E24B4A', borderRadius: '8px', padding: '12px 14px', fontSize: '13px', color: '#501313', marginBottom: '16px', display: 'flex', justifyContent: 'space-between' }}>
           {error}
@@ -146,10 +162,9 @@ export default function Calendario() {
         </div>
       )}
 
-      {/* ── VISTA MES ── */}
+      {/* VISTA MES */}
       {vista === 'mes' && (
         <div>
-          {/* Nav de mes */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
             <button onClick={() => navMes(-1)} style={navBtnStyle}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
@@ -162,9 +177,7 @@ export default function Calendario() {
             </button>
           </div>
 
-          {/* Grilla */}
           <div style={{ background: '#FFFFFF', border: '1px solid #E8E6DF', borderRadius: '12px', overflow: 'hidden' }}>
-            {/* Nombres días */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', borderBottom: '1px solid #E8E6DF' }}>
               {DIAS_SEMANA.map(d => (
                 <div key={d} style={{ textAlign: 'center', padding: '8px 4px', fontSize: '11px', fontWeight: '600', color: '#888780', textTransform: 'uppercase' }}>
@@ -172,15 +185,16 @@ export default function Calendario() {
                 </div>
               ))}
             </div>
-            {/* Celdas */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)' }}>
               {celdasMes.map((celda, i) => {
                 const key = celda.fecha.toISOString().slice(0, 10)
                 const evsDia = eventosPorDia[key] || []
+                const cumpleDia = cumpleaniosPorDia[key] || []
                 const hoyQ = esHoy(celda.fecha)
                 return (
                   <div key={i} style={{
-                    minHeight: '72px', padding: '6px', borderRight: (i + 1) % 7 !== 0 ? '1px solid #F1EFE8' : 'none',
+                    minHeight: '72px', padding: '6px',
+                    borderRight: (i + 1) % 7 !== 0 ? '1px solid #F1EFE8' : 'none',
                     borderBottom: i < 35 ? '1px solid #F1EFE8' : 'none',
                     background: !celda.mesActual ? '#F8F7F3' : '#FFFFFF',
                   }}>
@@ -205,15 +219,31 @@ export default function Calendario() {
                     {evsDia.length > 2 && (
                       <div style={{ fontSize: '9px', color: '#888780' }}>+{evsDia.length - 2}</div>
                     )}
+                    {/* Cumpleaños */}
+                    {cumpleDia.map(c => (
+                      <div key={c.id}
+                        style={{ fontSize: '9px', background: '#FFF3E0', color: '#E65100', borderRadius: '3px', padding: '2px 4px', marginBottom: '2px', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis', fontWeight: '500' }}
+                        title={`🎂 Cumpleaños de ${c.nombre}`}>
+                        🎂 {c.nombre.split(' ')[0]}
+                      </div>
+                    ))}
                   </div>
                 )
               })}
             </div>
           </div>
+
+          {/* Leyenda */}
+          <div style={{ display: 'flex', gap: '14px', marginTop: '10px', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+              <div style={{ width: '10px', height: '10px', borderRadius: '2px', background: '#FFF3E0', border: '1px solid #FFB74D' }} />
+              <span style={{ fontSize: '11px', color: '#888780' }}>Cumpleaños</span>
+            </div>
+          </div>
         </div>
       )}
 
-      {/* ── VISTA LISTA ── */}
+      {/* VISTA LISTA */}
       {vista === 'lista' && (
         <div>
           {cargando && (
@@ -236,10 +266,8 @@ export default function Calendario() {
             const tc = TIPO_COLOR[ev.tipo] || TIPO_COLOR.extra
             const dias = diasRestantes(ev.fecha_inicio)
             const asist = miAsistencia(ev)
-
             return (
-              <div key={ev.id}
-                onClick={() => navigate(`/calendario/${ev.id}`)}
+              <div key={ev.id} onClick={() => navigate(`/calendario/${ev.id}`)}
                 style={{
                   background: '#FFFFFF', border: '1px solid #E8E6DF', borderRadius: '12px',
                   padding: '14px 16px', marginBottom: '10px', cursor: 'pointer',
@@ -249,11 +277,7 @@ export default function Calendario() {
                 onMouseEnter={e => { e.currentTarget.style.borderColor = '#B4D8CE'; e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.05)' }}
                 onMouseLeave={e => { e.currentTarget.style.borderColor = '#E8E6DF'; e.currentTarget.style.boxShadow = 'none' }}
               >
-                {/* Caja de fecha */}
-                <div style={{
-                  width: '48px', flexShrink: 0, textAlign: 'center',
-                  background: tc.bg, borderRadius: '10px', padding: '8px 4px',
-                }}>
+                <div style={{ width: '48px', flexShrink: 0, textAlign: 'center', background: tc.bg, borderRadius: '10px', padding: '8px 4px' }}>
                   <div style={{ fontSize: '20px', fontWeight: '600', color: tc.color, lineHeight: 1 }}>
                     {new Date(ev.fecha_inicio).getDate()}
                   </div>
@@ -261,8 +285,6 @@ export default function Calendario() {
                     {MESES[new Date(ev.fecha_inicio).getMonth()].slice(0, 3)}
                   </div>
                 </div>
-
-                {/* Info */}
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px', flexWrap: 'wrap' }}>
                     <span style={{ fontSize: '14px', fontWeight: '500', color: '#1A1A18' }}>{ev.titulo}</span>
@@ -279,10 +301,7 @@ export default function Calendario() {
                     {ev.lugar && <> · {ev.lugar}</>}
                   </div>
                 </div>
-
-                {/* Asistencia */}
                 <AsistenciaPill estado={asist} />
-
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="#D3D1C7" style={{ flexShrink: 0 }}>
                   <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
                 </svg>
