@@ -6,6 +6,8 @@ import { useObras } from '../hooks/useObras'
 import { useAvisos, tiempoRelativo, TIPO_AVISO } from '../hooks/useAvisos'
 import { useArticulos } from '../hooks/useBlog'
 
+const ORDEN_ESTADO = { concierto: 0, activo: 1, estudio: 2 }
+
 export default function Inicio() {
   const navigate = useNavigate()
   const { perfil } = useAuth()
@@ -15,9 +17,18 @@ export default function Inicio() {
   const { articulos } = useArticulos({ limite: 3 })
 
   const proximoEvento = eventos[0]
-  const obrasEstudio  = obras.filter(o => o.estado === 'estudio' || o.estado === 'concierto').slice(0, 3)
   const avisosRecientes = avisos.slice(0, 3)
   const diasProx = proximoEvento ? diasRestantes(proximoEvento.fecha_inicio) : null
+
+  const obrasEstudio = [...obras]
+    .filter(o => o.estado === 'estudio' || o.estado === 'concierto' || o.estado === 'activo')
+    .sort((a, b) => {
+      const oa = ORDEN_ESTADO[a.estado] ?? 99
+      const ob = ORDEN_ESTADO[b.estado] ?? 99
+      if (oa !== ob) return oa - ob
+      return (a.orden ?? 0) - (b.orden ?? 0)
+    })
+    .slice(0, 3)
 
   useEffect(() => {
     if ('serviceWorker' in navigator) {
@@ -65,7 +76,6 @@ export default function Inicio() {
         <StatCard val={noLeidos} label={noLeidos === 1 ? 'Aviso sin leer' : 'Avisos sin leer'} color={noLeidos > 0 ? '#D85A30' : '#888780'} bg={noLeidos > 0 ? '#FAECE7' : '#F1EFE8'} onClick={() => navigate('/avisos')} />
         <StatCard val={eventos.length} label="Eventos próximos" color="#378ADD" bg="#E6F1FB" onClick={() => navigate('/calendario')} />
       </div>
-
 
       <div style={{ display: 'grid', gridTemplateColumns: window.innerWidth <= 768 ? '1fr' : '1fr 1fr', gap: '16px' }}>
         <Seccion titulo="Estudia esta semana" linkLabel="Ver todo" onLink={() => navigate('/repertorio')}>
@@ -127,8 +137,10 @@ function ItemObra({ obra, onClick, vozUsuario }) {
   const tieneAudio = vozUsuario && !!obra[`drive_audio_${vozUsuario}`]
   return (
     <div onClick={onClick} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 0', borderBottom: '1px solid #F1EFE8', cursor: 'pointer' }}>
-      <div style={{ width: '34px', height: '34px', borderRadius: '7px', background: '#F1EFE8', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="#1D9E75"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+      <div style={{ width: '34px', height: '34px', borderRadius: '7px', background: obra.estado === 'concierto' ? '#FAECE7' : '#F1EFE8', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill={obra.estado === 'concierto' ? '#D85A30' : '#1D9E75'}>
+          <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
+        </svg>
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: '13px', fontWeight: '500', color: '#1A1A18', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{obra.titulo}</div>

@@ -147,7 +147,7 @@ export function useObrasAdmin() {
     const { data, error: err } = await supabase
       .from('obras')
       .select('*')
-      .order('creado_en', { ascending: false })
+      .order('orden', { ascending: true }).order('creado_en', { ascending: false })
     if (err) { setError(err.message); setCargando(false); return }
     setObras(data || [])
     setCargando(false)
