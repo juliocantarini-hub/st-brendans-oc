@@ -221,7 +221,7 @@ export function ArticuloDetalle() {
         <div style={{ marginBottom: '12px' }}>
           <a href={driveUrlImprimir(articulo.drive_pdf_id)} target="_blank" rel="noopener noreferrer"
             style={{ fontSize: '12px', color: '#5F5E5A', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px', background: '#F1EFE8', padding: '5px 12px', borderRadius: '8px', border: '1px solid #E8E6DF' }}>
-            🖨 Imprimir
+            🖨 Abrir para imprimir
           </a>
         </div>
       )}

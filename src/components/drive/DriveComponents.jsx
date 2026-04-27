@@ -10,7 +10,7 @@ export function driveUrlDescarga(fileId) {
   return `https://drive.google.com/uc?export=download&id=${fileId}`
 }
 export function driveUrlImprimir(fileId) {
-  return `https://drive.google.com/file/d/${fileId}/print`
+  return `https://drive.google.com/file/d/${fileId}/view`
 }
 
 export function DriveVisor({ fileId, titulo = 'Partitura' }) {
@@ -48,7 +48,7 @@ export function DriveVisor({ fileId, titulo = 'Partitura' }) {
             Descargar
           </a>
           <a href={driveUrlImprimir(fileId)} target="_blank" rel="noopener noreferrer" style={{ ...estilos.linkBtn, color: '#5F5E5A' }}>
-            🖨 Imprimir
+            🖨 Abrir para imprimir
           </a>
         </div>
       )}
