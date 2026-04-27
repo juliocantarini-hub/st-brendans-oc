@@ -145,13 +145,6 @@ export default function Perfil() {
         </form>
       </div>
 
-      {/* Notificaciones */}
-      <div style={{ background: '#FFFFFF', borderRadius: '14px', padding: '22px', border: '1px solid #E8E6DF', marginBottom: '14px' }}>
-        <h3 style={estilos.seccionTitulo}>Notificaciones</h3>
-        <ToggleRow label="Notificaciones en la app" sub="Avisos, materiales y novedades" valor={notifApp} onChange={() => setNotifApp(v => !v)} />
-        <ToggleRow label="Avisos por correo electrónico" sub="Recordatorios de ensayo y concierto" valor={notifEmail} onChange={() => setNotifEmail(v => !v)} />
-      </div>
-
       {/* Seguridad */}
       <div style={{ background: '#FFFFFF', borderRadius: '14px', padding: '22px', border: '1px solid #E8E6DF' }}>
         <h3 style={estilos.seccionTitulo}>Seguridad</h3>
