@@ -35,6 +35,39 @@ const ICONOS = {
   usuarios:   "M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z",
 }
 
+function LogoCorum() {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px', paddingTop: '10px', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
+        {/* Ícono SVG CORUM */}
+        <svg width="22" height="22" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+          {/* Círculo exterior abierto (la "C") */}
+          <path
+            d="M 78 20 A 38 38 0 1 0 78 80"
+            stroke="rgba(159,225,203,0.7)"
+            strokeWidth="7"
+            strokeLinecap="round"
+            fill="none"
+          />
+          {/* Tres líneas horizontales internas */}
+          <line x1="28" y1="38" x2="66" y2="38" stroke="rgba(159,225,203,0.7)" strokeWidth="6" strokeLinecap="round" />
+          <line x1="28" y1="50" x2="66" y2="50" stroke="rgba(159,225,203,0.7)" strokeWidth="6" strokeLinecap="round" />
+          <line x1="28" y1="62" x2="66" y2="62" stroke="rgba(159,225,203,0.7)" strokeWidth="6" strokeLinecap="round" />
+        </svg>
+        {/* Texto CORUM */}
+        <div>
+          <div style={{ fontSize: '11px', fontWeight: '700', color: 'rgba(159,225,203,0.7)', letterSpacing: '2px', lineHeight: 1 }}>
+            CORUM
+          </div>
+          <div style={{ fontSize: '8px', color: 'rgba(159,225,203,0.45)', letterSpacing: '0.5px', lineHeight: 1.4 }}>
+            by Recurso Coral
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function Sidebar({ seccionAdmin, toggleAdmin, onNavegar }) {
   const navigate = useNavigate()
   const location = useLocation()
@@ -169,6 +202,10 @@ function isActive(ruta, esMenuAdmin) {
           style={{ width: '100%', padding: '6px', fontSize: '11px', color: 'rgba(255,255,255,0.45)', background: 'none', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', cursor: 'pointer' }}>
           Cerrar sesión
         </button>
+
+        {/* Logo CORUM */}
+        <LogoCorum />
+
       </div>
     </div>
   )
