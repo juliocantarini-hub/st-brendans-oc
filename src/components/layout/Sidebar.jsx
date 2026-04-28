@@ -37,11 +37,9 @@ const ICONOS = {
 
 function LogoCorum() {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px', paddingTop: '10px', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px', paddingTop: '18px', paddingBottom: '10px', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
-        {/* Ícono SVG CORUM */}
         <svg width="22" height="22" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-          {/* Círculo exterior abierto (la "C") */}
           <path
             d="M 78 20 A 38 38 0 1 0 78 80"
             stroke="rgba(159,225,203,0.7)"
@@ -49,12 +47,10 @@ function LogoCorum() {
             strokeLinecap="round"
             fill="none"
           />
-          {/* Tres líneas horizontales internas */}
           <line x1="28" y1="38" x2="66" y2="38" stroke="rgba(159,225,203,0.7)" strokeWidth="6" strokeLinecap="round" />
           <line x1="28" y1="50" x2="66" y2="50" stroke="rgba(159,225,203,0.7)" strokeWidth="6" strokeLinecap="round" />
           <line x1="28" y1="62" x2="66" y2="62" stroke="rgba(159,225,203,0.7)" strokeWidth="6" strokeLinecap="round" />
         </svg>
-        {/* Texto CORUM */}
         <div>
           <div style={{ fontSize: '11px', fontWeight: '700', color: 'rgba(159,225,203,0.7)', letterSpacing: '2px', lineHeight: 1 }}>
             CORUM
