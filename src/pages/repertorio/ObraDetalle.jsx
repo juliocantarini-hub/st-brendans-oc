@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useObra, marcarProgreso } from '../../hooks/useObras'
 import { useAuth } from '../../hooks/useAuth'
 import { DriveVisor } from '../../components/drive/DriveComponents'
-import { supabase } from '../../lib/supabaseClient'
+import { supabase } from '../../lib/supabase'
 
 const PROGRESO_OPTS = [
   { valor: 'pendiente',   label: 'Pendiente',   color: '#888780', bg: '#F1EFE8' },
