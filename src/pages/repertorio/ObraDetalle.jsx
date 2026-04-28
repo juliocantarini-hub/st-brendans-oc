@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useObra, marcarProgreso } from '../../hooks/useObras'
 import { useAuth } from '../../hooks/useAuth'
 import { DriveVisor } from '../../components/drive/DriveComponents'
+import { supabase } from '../../lib/supabaseClient'
 
 const PROGRESO_OPTS = [
   { valor: 'pendiente',   label: 'Pendiente',   color: '#888780', bg: '#F1EFE8' },
@@ -28,6 +29,14 @@ function useEsMovil() {
   return esMovil
 }
 
+async function registrarActividad(usuarioId, obraId, tipo) {
+  try {
+    await supabase.from('actividad_estudio').insert({ usuario_id: usuarioId, obra_id: obraId, tipo })
+  } catch (e) {
+    // silencioso, no interrumpe la experiencia
+  }
+}
+
 export default function ObraDetalle() {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -38,8 +47,24 @@ export default function ObraDetalle() {
   const [guardando, setGuardando] = useState(false)
   const [mensajeGuardado, setMensajeGuardado] = useState('')
   const [audioSeleccionado, setAudioSeleccionado] = useState(null)
+  const partituraRegistrada = useRef(false)
 
   const progresoActual = progreso ?? obra?.progreso ?? 'pendiente'
+
+  // Registrar apertura de partitura (una sola vez por visita)
+  useEffect(() => {
+    if (obra && usuario && !partituraRegistrada.current && obra.drive_partitura_id) {
+      partituraRegistrada.current = true
+      registrarActividad(usuario.id, id, 'partitura')
+    }
+  }, [obra, usuario, id])
+
+  function handleSeleccionarAudio(audio) {
+    setAudioSeleccionado(audio)
+    if (usuario && id) {
+      registrarActividad(usuario.id, id, 'audio')
+    }
+  }
 
   async function cambiarProgreso(nuevoEstado) {
     if (!usuario || guardando) return
@@ -128,13 +153,12 @@ export default function ObraDetalle() {
           <div style={{ fontSize: '11px', fontWeight: '600', color: '#5F5E5A', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '10px' }}>
             Audios
           </div>
-          {/* Botones de selección — siempre horizontales */}
           <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '12px' }}>
             {audiosDisponibles.map(audio => {
               const esVozPropia = audio.key === `drive_audio_${perfil?.voz}`
               const seleccionado = audioMostrado?.key === audio.key
               return (
-                <button key={audio.key} onClick={() => setAudioSeleccionado(audio)}
+                <button key={audio.key} onClick={() => handleSeleccionarAudio(audio)}
                   style={{
                     padding: '6px 12px', borderRadius: '8px', fontSize: '12px',
                     cursor: 'pointer',
@@ -150,7 +174,6 @@ export default function ObraDetalle() {
               )
             })}
           </div>
-          {/* Reproductor */}
           {audioMostrado && (
             <iframe
               key={audioMostrado.fileId}
@@ -164,8 +187,8 @@ export default function ObraDetalle() {
         </div>
       )}
 
-     {/* Notas del director — solo en móvil */}     
-     {esMovil && obra.notas_director && (
+      {/* Notas del director — solo en móvil */}
+      {esMovil && obra.notas_director && (
         <div style={{ background: '#FFFFFF', border: '1px solid #E8E6DF', borderRadius: '12px', padding: '14px', marginBottom: '14px' }}>
           <div style={{ fontSize: '11px', fontWeight: '600', color: '#5F5E5A', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px' }}>
             Notas del director
@@ -198,7 +221,7 @@ export default function ObraDetalle() {
                     const esVozPropia = audio.key === `drive_audio_${perfil?.voz}`
                     const seleccionado = audioMostrado?.key === audio.key
                     return (
-                      <button key={audio.key} onClick={() => setAudioSeleccionado(audio)}
+                      <button key={audio.key} onClick={() => handleSeleccionarAudio(audio)}
                         style={{
                           padding: '7px 10px', borderRadius: '8px', fontSize: '12px',
                           cursor: 'pointer', textAlign: 'left',
