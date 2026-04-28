@@ -196,7 +196,6 @@ export function BotonGoogle({ onClick, cargando }) {
       onMouseEnter={e => e.currentTarget.style.borderColor = '#888780'}
       onMouseLeave={e => e.currentTarget.style.borderColor = '#D3D1C7'}
     >
-      {/* Icono de Google */}
       <svg width="18" height="18" viewBox="0 0 24 24">
         <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
         <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
@@ -231,8 +230,8 @@ export function AuthLayout({ children }) {
         maxWidth: '420px',
         position: 'relative',
       }}>
-        {/* Logo */}
-        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+        {/* Logo Coro */}
+        <div style={{ textAlign: 'center', marginBottom: '24px' }}>
           <div style={{
             width: '52px', height: '52px',
             background: '#0F6E56',
@@ -270,6 +269,31 @@ export function AuthLayout({ children }) {
         }}>
           {children}
         </div>
+
+        {/* Logo CORUM */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '7px', marginTop: '24px' }}>
+          <svg width="20" height="20" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path
+              d="M 78 20 A 38 38 0 1 0 78 80"
+              stroke="rgba(15,110,86,0.5)"
+              strokeWidth="7"
+              strokeLinecap="round"
+              fill="none"
+            />
+            <line x1="28" y1="38" x2="66" y2="38" stroke="rgba(15,110,86,0.5)" strokeWidth="6" strokeLinecap="round" />
+            <line x1="28" y1="50" x2="66" y2="50" stroke="rgba(15,110,86,0.5)" strokeWidth="6" strokeLinecap="round" />
+            <line x1="28" y1="62" x2="66" y2="62" stroke="rgba(15,110,86,0.5)" strokeWidth="6" strokeLinecap="round" />
+          </svg>
+          <div>
+            <div style={{ fontSize: '10px', fontWeight: '700', color: 'rgba(15,110,86,0.5)', letterSpacing: '2px', lineHeight: 1 }}>
+              CORUM
+            </div>
+            <div style={{ fontSize: '8px', color: 'rgba(15,110,86,0.35)', letterSpacing: '0.5px', lineHeight: 1.4 }}>
+              by Recurso Coral
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
   )
