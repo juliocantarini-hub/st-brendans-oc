@@ -48,6 +48,7 @@ export default function ObraDetalle() {
   const [mensajeGuardado, setMensajeGuardado] = useState('')
   const [audioSeleccionado, setAudioSeleccionado] = useState(null)
   const partituraRegistrada = useRef(false)
+  const audioRegistrado = useRef(false)
 
   const progresoActual = progreso ?? obra?.progreso ?? 'pendiente'
 
@@ -56,6 +57,18 @@ export default function ObraDetalle() {
     if (obra && usuario && !partituraRegistrada.current && obra.drive_partitura_id) {
       partituraRegistrada.current = true
       registrarActividad(usuario.id, id, 'partitura')
+    }
+  }, [obra, usuario, id])
+
+  // Registrar visualización de audio inicial (una sola vez por visita)
+  useEffect(() => {
+    if (obra && usuario && !audioRegistrado.current) {
+      const audiosDisponibles = Object.entries(NOMBRES_AUDIO)
+        .filter(([key]) => obra[key])
+      if (audiosDisponibles.length > 0) {
+        audioRegistrado.current = true
+        registrarActividad(usuario.id, id, 'audio')
+      }
     }
   }, [obra, usuario, id])
 
