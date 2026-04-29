@@ -178,9 +178,9 @@ export default function MisCompaneros() {
                   </div>
                   <div style={{ fontSize: '12px', color: '#888780', display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
                     {c.telefono && (
-                      <a href={`tel:${c.telefono}`} style={{ color: '#0F6E56', textDecoration: 'none', fontWeight: '500' }}>
-                        📞 {c.telefono}
-                      </a>
+                      <a href={`https://wa.me/${c.telefono.startsWith('+54') ? c.telefono.replace(/\D/g, '') : '549' + c.telefono.replace(/\D/g, '').replace(/^0/, '').replace(/^15/, '')}`}
+  💬 {c.telefono}
+</a>
                     )}
                     {c.fecha_nacimiento && (
                       <span>
