@@ -33,7 +33,7 @@ function AccesoDenegado() {
           Acceso restringido
         </h2>
         <p style={{ fontSize: '14px', color: '#5F5E5A', lineHeight: '1.6', margin: '0 0 24px' }}>
-          No tenés permiso para ver esta sección.
+          No tienes permiso para ingresar.
         </p>
         <button onClick={cerrarSesion} style={{ background: 'none', border: '1px solid #D3D1C7', borderRadius: '8px', padding: '10px 20px', fontSize: '13px', color: '#5F5E5A', cursor: 'pointer' }}>
           Cerrar sesión

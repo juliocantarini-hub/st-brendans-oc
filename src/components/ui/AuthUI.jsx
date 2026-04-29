@@ -218,13 +218,6 @@ export function AuthLayout({ children }) {
       justifyContent: 'center',
       padding: '24px',
     }}>
-      {/* Decoración de fondo */}
-      <div style={{
-        position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-        background: `radial-gradient(ellipse at 20% 80%, rgba(29,158,117,0.08) 0%, transparent 50%),
-                     radial-gradient(ellipse at 80% 20%, rgba(216,90,48,0.06) 0%, transparent 50%)`,
-        pointerEvents: 'none',
-      }} />
       <div style={{
         width: '100%',
         maxWidth: '420px',
