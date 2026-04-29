@@ -42,7 +42,7 @@ export function DriveVisor({ fileId, titulo = 'Partitura', onAbrir }) {
       {estado === 'ok' && (
         <div style={estilos.pdfFooter}>
           
-            href={driveUrlPDF(fileId)}
+         <a href={driveUrlPDF(fileId)}
             target="_blank"
             rel="noopener noreferrer"
             style={estilos.linkBtn}
@@ -51,7 +51,7 @@ export function DriveVisor({ fileId, titulo = 'Partitura', onAbrir }) {
             Abrir ↗
           </a>
           
-            href={driveUrlDescarga(fileId)}
+         <a href={driveUrlDescarga(fileId)}
             target="_blank"
             rel="noopener noreferrer"
             style={{ ...estilos.linkBtn, color: '#5F5E5A' }}
@@ -59,7 +59,7 @@ export function DriveVisor({ fileId, titulo = 'Partitura', onAbrir }) {
             Descargar
           </a>
           
-            href={driveUrlImprimir(fileId)}
+          <a href={driveUrlImprimir(fileId)}
             target="_blank"
             rel="noopener noreferrer"
             style={{ ...estilos.linkBtn, color: '#5F5E5A' }}
