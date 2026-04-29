@@ -273,9 +273,9 @@ export function AuthLayout({ children }) {
               strokeLinecap="round"
               fill="none"
             />
-            <line x1="28" y1="38" x2="66" y2="38" stroke="rgba(15,110,86,0.1)" strokeWidth="6" strokeLinecap="round" />
-            <line x1="28" y1="50" x2="66" y2="50" stroke="rgba(15,110,86,0.1)" strokeWidth="6" strokeLinecap="round" />
-            <line x1="28" y1="62" x2="66" y2="62" stroke="rgba(15,110,86,0.1)" strokeWidth="6" strokeLinecap="round" />
+            <line x1="28" y1="38" x2="66" y2="38" stroke="rgba(15,110,86,0.5)" strokeWidth="6" strokeLinecap="round" />
+            <line x1="28" y1="50" x2="66" y2="50" stroke="rgba(15,110,86,0.5)" strokeWidth="6" strokeLinecap="round" />
+            <line x1="28" y1="62" x2="66" y2="62" stroke="rgba(15,110,86,0.5)" strokeWidth="6" strokeLinecap="round" />
           </svg>
           <div>
             <div style={{ fontSize: '10px', fontWeight: '700', color: 'rgba(15,110,86,0.5)', letterSpacing: '2px', lineHeight: 1 }}>
