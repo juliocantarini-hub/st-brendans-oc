@@ -42,7 +42,7 @@ export function DriveVisor({ fileId, titulo = 'Partitura', onAbrir }) {
       {estado === 'ok' && (
         <div style={estilos.pdfFooter}>
           
-            href={driveUrlPDF(fileId)}
+          <a href={driveUrlPDF(fileId)}
             target="_blank"
             rel="noopener noreferrer"
             style={estilos.linkBtn}
