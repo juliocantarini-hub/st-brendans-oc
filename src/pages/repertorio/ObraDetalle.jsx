@@ -47,6 +47,16 @@ export default function ObraDetalle() {
   const [audioSeleccionado, setAudioSeleccionado] = useState(null)
   const audioRegistrado = useRef(false)
 
+  useEffect(() => {
+    if (obra && usuario && !audioRegistrado.current) {
+      const tieneAudio = Object.keys(NOMBRES_AUDIO).some(key => obra[key])
+      if (tieneAudio) {
+        audioRegistrado.current = true
+        registrarActividad(usuario.id, id, 'audio')
+      }
+    }
+  }, [obra, usuario, id])
+
   const progresoActual = progreso ?? obra?.progreso ?? 'pendiente'
 
   function handleSeleccionarAudio(audio) {
