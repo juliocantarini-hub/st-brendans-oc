@@ -75,7 +75,6 @@ export default function Repertorio() {
   }, [obras])
 
   async function handleClickObra(obraId) {
-    console.log('usuario:', usuario)
     if (usuario) {
       registrarActividad(usuario.id, obraId, 'apertura')
     }

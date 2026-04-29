@@ -45,12 +45,20 @@ export default function ObraDetalle() {
   const [guardando, setGuardando] = useState(false)
   const [mensajeGuardado, setMensajeGuardado] = useState('')
   const [audioSeleccionado, setAudioSeleccionado] = useState(null)
+  const audioRegistrado = useRef(false)
 
   const progresoActual = progreso ?? obra?.progreso ?? 'pendiente'
 
   function handleSeleccionarAudio(audio) {
     setAudioSeleccionado(audio)
     if (usuario && id) {
+      registrarActividad(usuario.id, id, 'audio')
+    }
+  }
+
+  function handleAudioCargado() {
+    if (!audioRegistrado.current && usuario && id) {
+      audioRegistrado.current = true
       registrarActividad(usuario.id, id, 'audio')
     }
   }
@@ -171,6 +179,7 @@ export default function ObraDetalle() {
               height="80px"
               allow="autoplay"
               style={{ border: 'none', borderRadius: '8px', display: 'block' }}
+              onLoad={handleAudioCargado}
             />
           )}
         </div>
@@ -242,6 +251,7 @@ export default function ObraDetalle() {
                     height="80px"
                     allow="autoplay"
                     style={{ border: 'none', borderRadius: '8px' }}
+                    onLoad={handleAudioCargado}
                   />
                 )}
               </div>
