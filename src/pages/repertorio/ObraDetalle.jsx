@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useObra, marcarProgreso } from '../../hooks/useObras'
 import { useAuth } from '../../hooks/useAuth'
@@ -45,25 +45,17 @@ export default function ObraDetalle() {
   const [guardando, setGuardando] = useState(false)
   const [mensajeGuardado, setMensajeGuardado] = useState('')
   const [audioSeleccionado, setAudioSeleccionado] = useState(null)
-  const audioRegistrado = useRef(false)
 
   useEffect(() => {
-    console.log('useEffect audio:', { obra: !!obra, usuario: !!usuario, audioRegistrado: audioRegistrado.current })
-    if (obra && usuario && !audioRegistrado.current) {
-      const tieneAudio = Object.keys(NOMBRES_AUDIO).some(key => obra[key])
-      console.log('tieneAudio:', tieneAudio)
-      if (tieneAudio) {
-        audioRegistrado.current = true
-        registrarActividad(usuario.id, id, 'audio')
-      }
+    if (obra && usuario) {
+      registrarActividad(usuario.id, id, 'apertura')
     }
   }, [obra, usuario, id])
 
-  function handleAudioCargado() {
-    if (!audioRegistrado.current && usuario && id) {
-      audioRegistrado.current = true
-      registrarActividad(usuario.id, id, 'audio')
-    }
+  const progresoActual = progreso ?? obra?.progreso ?? 'pendiente'
+
+  function handleSeleccionarAudio(audio) {
+    setAudioSeleccionado(audio)
   }
 
   async function cambiarProgreso(nuevoEstado) {
@@ -182,7 +174,6 @@ export default function ObraDetalle() {
               height="80px"
               allow="autoplay"
               style={{ border: 'none', borderRadius: '8px', display: 'block' }}
-              onLoad={handleAudioCargado}
             />
           )}
         </div>
@@ -254,7 +245,6 @@ export default function ObraDetalle() {
                     height="80px"
                     allow="autoplay"
                     style={{ border: 'none', borderRadius: '8px' }}
-                    onLoad={handleAudioCargado}
                   />
                 )}
               </div>
