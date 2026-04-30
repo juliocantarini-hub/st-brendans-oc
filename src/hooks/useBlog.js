@@ -100,8 +100,7 @@ export async function actualizarArticulo(id, datos) {
     .update(datos)
     .eq('id', id)
     .select()
-    .single()
-  return { ok: !error, data, error: error?.message }
+  return { ok: !error, data: data?.[0], error: error?.message }
 }
 
 export async function publicarArticulo(id, publicado) {
