@@ -140,9 +140,10 @@ export async function actualizarEvento(id, datos, obraIds) {
     .update(datos)
     .eq('id', id)
     .select()
-    .single()
 
   if (error) return { ok: false, error: error.message }
+
+  const eventoData = data?.[0]
 
   if (obraIds !== undefined) {
     await supabase.from('eventos_obras').delete().eq('evento_id', id)
@@ -152,7 +153,7 @@ export async function actualizarEvento(id, datos, obraIds) {
       )
     }
   }
-  return { ok: true, data }
+  return { ok: true, data: eventoData }
 }
 
 export async function publicarEvento(id, publicado) {
