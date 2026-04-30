@@ -1,5 +1,6 @@
 import { useState, useEffect, createContext, useContext } from 'react'
 import { supabase } from '../lib/supabase'
+import { getCoroActual } from '../lib/coro'
 
 const AuthContext = createContext(null)
 
@@ -51,7 +52,6 @@ function useAuthLogic() {
 
       if (error) throw error
 
-      // Si faltan datos del metadata, actualizarlos
       const { data: authData } = await supabase.auth.getUser()
       const meta = authData?.user?.user_metadata
       const updates = {}
@@ -97,22 +97,35 @@ function useAuthLogic() {
 
   async function registro(email, password, nombre, voz, fecha_nacimiento, dni, telefono) {
     setError(null)
-    const { data, error } = await supabase.auth.signUp({
-      email: email.trim().toLowerCase(),
-      password,
-      options: {
-        data: { full_name: nombre.trim(), voz: voz || null, fecha_nacimiento: fecha_nacimiento || null, dni: dni || null, telefono: telefono || null },
-        emailRedirectTo: `${window.location.origin}/`,
-      },
-    })
-    if (error) {
-      setError(traducirError(error.message))
-      return { ok: false, error: traducirError(error.message) }
-    }
-    return {
-      ok: true,
-      necesitaConfirmacion: !data.session,
-      data,
+    try {
+      const coro = await getCoroActual()
+      const { data, error } = await supabase.auth.signUp({
+        email: email.trim().toLowerCase(),
+        password,
+        options: {
+          data: {
+            nombre: nombre.trim(),
+            voz: voz || null,
+            fecha_nacimiento: fecha_nacimiento || null,
+            dni: dni || null,
+            telefono: telefono || null,
+            coro_id: coro.id,
+          },
+          emailRedirectTo: `${window.location.origin}/`,
+        },
+      })
+      if (error) {
+        setError(traducirError(error.message))
+        return { ok: false, error: traducirError(error.message) }
+      }
+      return {
+        ok: true,
+        necesitaConfirmacion: !data.session,
+        data,
+      }
+    } catch (err) {
+      setError('Error al obtener datos del coro.')
+      return { ok: false, error: 'Error al obtener datos del coro.' }
     }
   }
 

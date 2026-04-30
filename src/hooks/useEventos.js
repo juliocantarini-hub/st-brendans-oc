@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
+import { getCoroActual } from '../lib/coro'
 
-// ─── Hook: lista de eventos próximos (cantante) ───────────────────────────────
 export function useEventos(filtros = {}) {
   const [eventos, setEventos]   = useState([])
   const [cargando, setCargando] = useState(true)
@@ -21,7 +21,7 @@ export function useEventos(filtros = {}) {
         .eq('publicado', true)
         .order('fecha_inicio', { ascending: true })
 
-      if (filtros.tipo)    query = query.eq('tipo', filtros.tipo)
+      if (filtros.tipo) query = query.eq('tipo', filtros.tipo)
       if (filtros.soloFuturos !== false) {
         query = query.gte('fecha_inicio', new Date().toISOString())
       }
@@ -47,7 +47,6 @@ export function useEventos(filtros = {}) {
   return { eventos, cargando, error, recargar: cargar }
 }
 
-// ─── Hook: evento individual ──────────────────────────────────────────────────
 export function useEvento(id) {
   const [evento, setEvento]     = useState(null)
   const [cargando, setCargando] = useState(true)
@@ -75,7 +74,6 @@ export function useEvento(id) {
   return { evento, cargando, error, recargar: cargar }
 }
 
-// ─── Hook: todos los eventos (admin) ─────────────────────────────────────────
 export function useEventosAdmin() {
   const [eventos, setEventos]   = useState([])
   const [cargando, setCargando] = useState(true)
@@ -85,10 +83,7 @@ export function useEventosAdmin() {
     setCargando(true)
     const { data, error: err } = await supabase
       .from('eventos')
-      .select(`
-        *,
-        asistencias(estado)
-      `)
+      .select(`*, asistencias(estado)`)
       .order('fecha_inicio', { ascending: false })
     if (err) { setError(err.message); setCargando(false); return }
     setEventos(data || [])
@@ -99,7 +94,6 @@ export function useEventosAdmin() {
   return { eventos, cargando, error, recargar: cargar }
 }
 
-// ─── Confirmar / cambiar asistencia ──────────────────────────────────────────
 export async function confirmarAsistencia(eventoId, perfilId, estado) {
   const { error } = await supabase
     .from('asistencias')
@@ -110,7 +104,6 @@ export async function confirmarAsistencia(eventoId, perfilId, estado) {
   return { ok: !error, error: error?.message }
 }
 
-// ─── Obtener mi asistencia a un evento ───────────────────────────────────────
 export async function obtenerMiAsistencia(eventoId, perfilId) {
   const { data } = await supabase
     .from('asistencias')
@@ -121,17 +114,16 @@ export async function obtenerMiAsistencia(eventoId, perfilId) {
   return data?.estado || 'pendiente'
 }
 
-// ─── CRUD de eventos (admin) ──────────────────────────────────────────────────
 export async function crearEvento(datos, obraIds = []) {
+  const coro = await getCoroActual()
   const { data, error } = await supabase
     .from('eventos')
-    .insert([{ ...datos, publicado: false }])
+    .insert([{ ...datos, coro_id: coro.id, publicado: false }])
     .select()
     .single()
 
   if (error) return { ok: false, error: error.message }
 
-  // Vincular obras si se pasaron
   if (obraIds.length > 0) {
     await supabase.from('eventos_obras').insert(
       obraIds.map((obraId, i) => ({
@@ -152,7 +144,6 @@ export async function actualizarEvento(id, datos, obraIds) {
 
   if (error) return { ok: false, error: error.message }
 
-  // Reemplazar obras vinculadas si se pasaron
   if (obraIds !== undefined) {
     await supabase.from('eventos_obras').delete().eq('evento_id', id)
     if (obraIds.length > 0) {
@@ -177,7 +168,6 @@ export async function eliminarEvento(id) {
   return { ok: !error, error: error?.message }
 }
 
-// ─── Helpers de fecha ─────────────────────────────────────────────────────────
 export function formatFecha(iso, opciones = {}) {
   if (!iso) return ''
   const fecha = new Date(iso)

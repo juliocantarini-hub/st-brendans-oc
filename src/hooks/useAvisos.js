@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
+import { getCoroActual } from '../lib/coro'
 
 export function useAvisos(filtros = {}) {
   const [avisos, setAvisos]     = useState([])
@@ -81,9 +82,10 @@ export function useAvisosAdmin() {
 }
 
 export async function crearAviso(datos) {
+  const coro = await getCoroActual()
   const { data, error } = await supabase
     .from('avisos')
-    .insert([datos])
+    .insert([{ ...datos, coro_id: coro.id }])
     .select()
     .single()
   return { ok: !error, data, error: error?.message }

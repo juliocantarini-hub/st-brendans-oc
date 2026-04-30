@@ -108,7 +108,7 @@ export default function Sidebar({ seccionAdmin, toggleAdmin, onNavegar }) {
             </svg>
           </div>
           <div>
-            <div style={{ fontFamily: 'Georgia, serif', fontSize: '14px', color: '#9FE1CB' }}>Coro Almafuerte</div>
+            <div style={{ fontFamily: 'Georgia, serif', fontSize: '14px', color: '#9FE1CB' }}>{import.meta.env.VITE_CORO_NOMBRE || 'Coro'}</div>
             <div style={{ fontSize: '10px', color: 'rgba(159,225,203,0.5)' }}>Plataforma coral</div>
           </div>
         </div>

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
+import { getCoroActual } from '../lib/coro'
 
-// ─── Hook: listas de asistencia (admin) ──────────────────────────────────────
 export function useListasAsistencia() {
   const [listas, setListas]     = useState([])
   const [cargando, setCargando] = useState(true)
@@ -22,7 +22,6 @@ export function useListasAsistencia() {
   return { listas, cargando, error, recargar: cargar }
 }
 
-// ─── Hook: historial del cantante ────────────────────────────────────────────
 export function useHistorialAsistencia(perfilId) {
   const [historial, setHistorial] = useState([])
   const [cargando, setCargando]   = useState(true)
@@ -43,7 +42,6 @@ export function useHistorialAsistencia(perfilId) {
   return { historial, cargando }
 }
 
-// ─── Hook: registros de una lista (admin) ────────────────────────────────────
 export function useRegistrosLista(listaId) {
   const [registros, setRegistros] = useState([])
   const [cantantes, setCantantes] = useState([])
@@ -65,11 +63,11 @@ export function useRegistrosLista(listaId) {
   return { registros, cantantes, cargando, recargar: cargar }
 }
 
-// ─── CRUD ─────────────────────────────────────────────────────────────────────
 export async function crearLista(fecha, descripcion) {
+  const coro = await getCoroActual()
   const { data, error } = await supabase
     .from('listas_asistencia')
-    .insert([{ fecha, descripcion }])
+    .insert([{ fecha, descripcion, coro_id: coro.id }])
     .select().single()
   return { ok: !error, data, error: error?.message }
 }
@@ -92,7 +90,6 @@ export async function resetearAsistencia() {
   return { ok: !error, error: error?.message }
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 export function calcularEstadisticas(historial) {
   const meses = {}
   historial.forEach(r => {

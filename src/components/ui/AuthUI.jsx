@@ -245,7 +245,7 @@ export function AuthLayout({ children }) {
             color: '#1A1A18',
             margin: 0,
           }}>
-            Coro Almafuerte
+            {import.meta.env.VITE_CORO_NOMBRE || 'Coro'}
           </h1>
           <p style={{ fontSize: '13px', color: '#888780', margin: '4px 0 0' }}>
             Plataforma de estudio coral

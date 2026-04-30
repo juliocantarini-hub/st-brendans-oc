@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
+import { getCoroActual } from '../lib/coro'
 import { useAuth } from './useAuth'
 
-// ─── Hook principal de repertorio ─────────────────────────────────────────────
 export function useObras(filtros = {}) {
   const { usuario } = useAuth()
   const [obras, setObras]       = useState([])
@@ -22,7 +22,7 @@ export function useObras(filtros = {}) {
         .eq('publicada', true)
         .order('orden', { ascending: true }).order('titulo')
 
-      if (filtros.estado)  query = query.eq('estado', filtros.estado)
+      if (filtros.estado)   query = query.eq('estado', filtros.estado)
       if (filtros.busqueda) {
         query = query.or(
           `titulo.ilike.%${filtros.busqueda}%,compositor.ilike.%${filtros.busqueda}%`
@@ -32,7 +32,6 @@ export function useObras(filtros = {}) {
       const { data, error: err } = await query
       if (err) throw err
 
-      // Aplanar el progreso del usuario actual
       const obras = (data || []).map(o => ({
         ...o,
         progreso: o.progreso_estudio?.[0]?.estado || 'pendiente',
@@ -51,7 +50,6 @@ export function useObras(filtros = {}) {
   return { obras, cargando, error, recargar: cargar }
 }
 
-// ─── Hook para una obra individual ───────────────────────────────────────────
 export function useObra(id) {
   const [obra, setObra]         = useState(null)
   const [cargando, setCargando] = useState(true)
@@ -86,7 +84,6 @@ export function useObra(id) {
   return { obra, cargando, error }
 }
 
-// ─── Marcar progreso de estudio ───────────────────────────────────────────────
 export async function marcarProgreso(usuarioId, obraId, estado) {
   const { error } = await supabase
     .from('progreso_estudio')
@@ -100,11 +97,11 @@ export async function marcarProgreso(usuarioId, obraId, estado) {
   return { ok: !error, error: error?.message }
 }
 
-// ─── CRUD de obras (admin/director) ──────────────────────────────────────────
 export async function crearObra(datos) {
+  const coro = await getCoroActual()
   const { data, error } = await supabase
     .from('obras')
-    .insert([{ ...datos, publicada: false }])
+    .insert([{ ...datos, coro_id: coro.id, publicada: false }])
     .select()
     .single()
   return { ok: !error, data, error: error?.message }
@@ -136,7 +133,6 @@ export async function eliminarObra(id) {
   return { ok: !error, error: error?.message }
 }
 
-// ─── Obtener todas las obras (admin) ─────────────────────────────────────────
 export function useObrasAdmin() {
   const [obras, setObras]       = useState([])
   const [cargando, setCargando] = useState(true)

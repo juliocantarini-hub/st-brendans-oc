@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
+import { getCoroActual } from '../lib/coro'
 
-// ─── Hook: artículos del blog ─────────────────────────────────────────────────
 export function useArticulos(filtros = {}) {
   const [articulos, setArticulos] = useState([])
   const [cargando, setCargando]   = useState(true)
@@ -40,7 +40,6 @@ export function useArticulos(filtros = {}) {
   return { articulos, cargando, error, recargar: cargar }
 }
 
-// ─── Hook: artículo individual ────────────────────────────────────────────────
 export function useArticulo(id) {
   const [articulo, setArticulo]   = useState(null)
   const [cargando, setCargando]   = useState(true)
@@ -50,7 +49,7 @@ export function useArticulo(id) {
     if (!id) return
     setCargando(true)
     supabase
-      .from('articulos')       
+      .from('articulos')
       .select('*, perfiles(nombre)')
       .eq('id', id)
       .eq('publicado', true)
@@ -65,7 +64,6 @@ export function useArticulo(id) {
   return { articulo, cargando, error }
 }
 
-// ─── Hook: admin ──────────────────────────────────────────────────────────────
 export function useArticulosAdmin() {
   const [articulos, setArticulos] = useState([])
   const [cargando, setCargando]   = useState(true)
@@ -86,11 +84,11 @@ export function useArticulosAdmin() {
   return { articulos, cargando, error, recargar: cargar }
 }
 
-// ─── CRUD ─────────────────────────────────────────────────────────────────────
 export async function crearArticulo(datos) {
+  const coro = await getCoroActual()
   const { data, error } = await supabase
     .from('articulos')
-    .insert([{ ...datos, publicado: false }])
+    .insert([{ ...datos, coro_id: coro.id, publicado: false }])
     .select()
     .single()
   return { ok: !error, data, error: error?.message }
@@ -119,7 +117,6 @@ export async function eliminarArticulo(id) {
   return { ok: !error, error: error?.message }
 }
 
-// ─── Categorías ───────────────────────────────────────────────────────────────
 export const CATEGORIAS = []
 
 export const CATEGORIA_COLOR = {
