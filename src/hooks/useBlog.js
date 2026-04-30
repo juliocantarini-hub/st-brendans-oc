@@ -1,3 +1,4 @@
+// v2
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 import { getCoroActual } from '../lib/coro'
