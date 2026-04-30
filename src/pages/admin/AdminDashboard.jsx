@@ -22,7 +22,7 @@ export default function AdminDashboard() {
         totalObras:       obras.count || 0,
         obrasPublicadas:  (obras.data || []).filter(o => o.publicada).length,
         eventosFuturos:   eventos.data?.length || 0,
-        avisosSinPublicar:(avisos.data || []).filter(a => !a.publicado).length,
+        avisosPublicados: (avisos.data || []).filter(a => a.publicado).length,
         asistPendientes:  asistencias.data?.length || 0,
       })
       setCargando(false)
@@ -87,10 +87,10 @@ export default function AdminDashboard() {
         </h3>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
           {[
-            { label: 'Usuarios y roles',    sub: `${stats?.totalUsuarios || '—'} registrados`,     ruta: '/admin/usuarios' },
-            { label: 'Obras y repertorio',  sub: `${stats?.totalObras || '—'} obras en total`,      ruta: '/admin/obras' },
-            { label: 'Eventos y ensayos',   sub: `${stats?.eventosFuturos || '—'} próximos`,        ruta: '/admin/eventos' },
-            { label: 'Avisos publicados',   sub: `${stats?.avisosSinPublicar || '—'} borradores`,   ruta: '/admin/avisos' },
+            { label: 'Usuarios y roles',    sub: `${stats?.totalUsuarios || '—'} registrados`,      ruta: '/admin/usuarios' },
+            { label: 'Obras y repertorio',  sub: `${stats?.totalObras || '—'} obras en total`,       ruta: '/admin/obras' },
+            { label: 'Eventos y ensayos',   sub: `${stats?.eventosFuturos || '—'} próximos`,         ruta: '/admin/eventos' },
+            { label: 'Avisos publicados',   sub: `${stats?.avisosPublicados || '—'} publicados`,     ruta: '/admin/avisos' },
           ].map(item => (
             <div key={item.ruta} onClick={() => navigate(item.ruta)}
               style={{ background: '#FFFFFF', border: '1px solid #E8E6DF', borderRadius: '12px', padding: '14px 16px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', transition: 'border-color 0.12s' }}
