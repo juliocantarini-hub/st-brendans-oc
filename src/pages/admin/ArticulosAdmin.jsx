@@ -37,7 +37,7 @@ export function ArticulosAdmin() {
 
   async function toggleDestacado(art) {
     setProcesando(art.id)
-    await supabase.from('articulos').update({ destacado: !art.destacado }).eq('id', art.id)
+    await supabase.from('textos').update({ destacado: !art.destacado }).eq('id', art.id)
     await recargar()
     setProcesando(null)
   }
@@ -144,14 +144,14 @@ export function ArticulosAdmin() {
                     {new Date(art.creado_en).toLocaleDateString('es-AR', { day: 'numeric', month: 'short', year: 'numeric' })}
                   </div>
                 </div>
-                <span style={{ background: cc.bg, color: cc.color, fontSize: '10px', fontWeight: '600', padding: '2px 7px', borderRadius: '10px', display: 'inline-block' }}>{catLabel}</span>
-                <span style={{ fontSize: '12px', color: '#888780' }}>{art.perfiles?.nombre?.split(' ')[0] || '—'}</span>
+                <span style={{ background: cc.bg, color: cc.color, fontSize: '10px', fontWeight: '600', padding: '2px 7px', borderRadius: '10px', justifySelf: 'start' }}>{catLabel}</span>
+                <span style={{ fontSize: '12px', color: '#5F5E5A' }}>{art.perfiles?.nombre?.split(' ')[0] || '—'}</span>
                 <div style={{ textAlign: 'center' }}>
-                  {art.drive_pdf_id ? <span style={{ fontSize: '14px' }}>📄</span> : <span style={{ fontSize: '12px', color: '#D3D1C7' }}>—</span>}
+                  {art.drive_pdf_id ? <span style={{ fontSize: '13px' }}>📄</span> : <span style={{ color: '#D3D1C7' }}>—</span>}
                 </div>
                 <div style={{ textAlign: 'center' }}>
                   <button onClick={() => toggleDestacado(art)} disabled={!!procesando}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px', opacity: art.destacado ? 1 : 0.3 }}>⭐</button>
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '16px', opacity: art.destacado ? 1 : 0.25, padding: 0 }}>⭐</button>
                 </div>
                 <div style={{ textAlign: 'center' }}>
                   <button onClick={() => togglePublicar(art)} disabled={!!procesando}
@@ -161,9 +161,11 @@ export function ArticulosAdmin() {
                 </div>
                 <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
                   <button onClick={() => navigate(`/admin/blog/${art.id}`)}
-                    style={{ padding: '4px 10px', fontSize: '12px', borderRadius: '6px', border: '1px solid #D3D1C7', background: 'none', cursor: 'pointer', color: '#0F6E56', fontWeight: '500' }}>Editar</button>
+                    style={{ padding: '5px 12px', fontSize: '12px', borderRadius: '6px', border: '1px solid #D3D1C7', background: 'none', cursor: 'pointer', color: '#0F6E56', fontWeight: '500' }}>
+                    Editar
+                  </button>
                   <button onClick={() => setConfirmEliminar(art)}
-                    style={{ padding: '4px 8px', fontSize: '12px', borderRadius: '6px', border: '1px solid #F0C5B4', background: 'none', cursor: 'pointer', color: '#A32D2D' }}>✕</button>
+                    style={{ padding: '5px 8px', fontSize: '12px', borderRadius: '6px', border: '1px solid #F0C5B4', background: 'none', cursor: 'pointer', color: '#A32D2D' }}>✕</button>
                 </div>
               </div>
             )
@@ -202,7 +204,7 @@ export function ArticuloForm() {
 
   useEffect(() => {
     if (!esEdicion) return
-    supabase.from('articulos').select('*').eq('id', id).single().then(({ data }) => {
+    supabase.from('textos').select('*').eq('id', id).single().then(({ data }) => {
       if (!data) return
       setForm({
         titulo: data.titulo || '',

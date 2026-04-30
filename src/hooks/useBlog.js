@@ -12,7 +12,7 @@ export function useArticulos(filtros = {}) {
     setError(null)
     try {
       let query = supabase
-        .from('articulos')
+        .from('textos')
         .select(`*, perfiles(nombre)`)
         .eq('publicado', true)
         .order('creado_en', { ascending: false })
@@ -29,7 +29,7 @@ export function useArticulos(filtros = {}) {
       if (err) throw err
       setArticulos(data || [])
     } catch (err) {
-      setError('No pudimos cargar el blog.')
+      setError('No pudimos cargar los textos.')
       console.error(err)
     } finally {
       setCargando(false)
@@ -49,13 +49,13 @@ export function useArticulo(id) {
     if (!id) return
     setCargando(true)
     supabase
-      .from('articulos')
+      .from('textos')
       .select('*, perfiles(nombre)')
       .eq('id', id)
       .eq('publicado', true)
       .single()
       .then(({ data, error: err }) => {
-        if (err) { setError('Artículo no encontrado.'); setCargando(false); return }
+        if (err) { setError('Texto no encontrado.'); setCargando(false); return }
         setArticulo(data)
         setCargando(false)
       })
@@ -72,7 +72,7 @@ export function useArticulosAdmin() {
   const cargar = useCallback(async () => {
     setCargando(true)
     const { data, error: err } = await supabase
-      .from('articulos')
+      .from('textos')
       .select(`*, perfiles(nombre)`)
       .order('creado_en', { ascending: false })
     if (err) { setError(err.message); setCargando(false); return }
@@ -87,7 +87,7 @@ export function useArticulosAdmin() {
 export async function crearArticulo(datos) {
   const coro = await getCoroActual()
   const { data, error } = await supabase
-    .from('articulos')
+    .from('textos')
     .insert([{ ...datos, coro_id: coro.id, publicado: false }])
     .select()
     .single()
@@ -96,7 +96,7 @@ export async function crearArticulo(datos) {
 
 export async function actualizarArticulo(id, datos) {
   const { data, error } = await supabase
-    .from('articulos')
+    .from('textos')
     .update(datos)
     .eq('id', id)
     .select()
@@ -105,14 +105,14 @@ export async function actualizarArticulo(id, datos) {
 
 export async function publicarArticulo(id, publicado) {
   const { error } = await supabase
-    .from('articulos')
+    .from('textos')
     .update({ publicado })
     .eq('id', id)
   return { ok: !error, error: error?.message }
 }
 
 export async function eliminarArticulo(id) {
-  const { error } = await supabase.from('articulos').delete().eq('id', id)
+  const { error } = await supabase.from('textos').delete().eq('id', id)
   return { ok: !error, error: error?.message }
 }
 
