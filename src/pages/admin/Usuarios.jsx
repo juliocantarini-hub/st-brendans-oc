@@ -23,6 +23,7 @@ export default function Usuarios() {
   const [guardando, setGuardando]   = useState(false)
   const [mensaje, setMensaje]       = useState('')
   const [confirmDesactivar, setConfirmDesactivar] = useState(null)
+  const [confirmEliminar, setConfirmEliminar]     = useState(null)
   const [procesando, setProcesando] = useState(false)
   const esMovil = useEsMovil()
 
@@ -67,6 +68,17 @@ export default function Usuarios() {
     setProcesando(false)
     setConfirmDesactivar(null)
     setMensaje('Cantante desactivado.')
+    setTimeout(() => setMensaje(''), 3000)
+    cargar()
+  }
+
+  async function handleEliminar() {
+    if (!confirmEliminar) return
+    setProcesando(true)
+    await supabase.from('perfiles').delete().eq('id', confirmEliminar.id)
+    setProcesando(false)
+    setConfirmEliminar(null)
+    setMensaje('Cantante eliminado.')
     setTimeout(() => setMensaje(''), 3000)
     cargar()
   }
@@ -134,6 +146,12 @@ export default function Usuarios() {
                       Desactivar
                     </button>
                   )}
+                  {u.estado === 'inactivo' && (
+                    <button onClick={() => setConfirmEliminar(u)}
+                      style={{ padding: '5px 8px', fontSize: '12px', borderRadius: '6px', border: '1px solid #F0C5B4', background: '#FFF0ED', cursor: 'pointer', color: '#A32D2D', fontWeight: '500' }}>
+                      Eliminar
+                    </button>
+                  )}
                 </div>
               </div>
             )
@@ -144,7 +162,7 @@ export default function Usuarios() {
       {/* DESKTOP: tabla */}
       {!cargando && !esMovil && (
         <div style={{ background: '#FFFFFF', border: '1px solid #E8E6DF', borderRadius: '12px', overflow: 'hidden' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 100px 90px 80px 110px', padding: '10px 16px', background: '#F8F7F3', borderBottom: '1px solid #E8E6DF', fontSize: '11px', fontWeight: '600', color: '#888780', textTransform: 'uppercase', letterSpacing: '0.4px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 100px 90px 90px 160px', padding: '10px 16px', background: '#F8F7F3', borderBottom: '1px solid #E8E6DF', fontSize: '11px', fontWeight: '600', color: '#888780', textTransform: 'uppercase', letterSpacing: '0.4px' }}>
             <span>Nombre</span><span>Voz</span><span>Rol</span><span>Estado</span><span style={{ textAlign: 'right' }}>Acciones</span>
           </div>
           {filtrados.length === 0 && (
@@ -153,10 +171,10 @@ export default function Usuarios() {
           {filtrados.map((u, i) => {
             const rs = ROLE_STYLE[u.rol] || ROLE_STYLE.cantante
             return (
-              <div key={u.id} style={{ display: 'grid', gridTemplateColumns: '1fr 100px 90px 80px 110px', padding: '12px 16px', alignItems: 'center', borderBottom: i < filtrados.length - 1 ? '1px solid #F1EFE8' : 'none', opacity: u.estado === 'inactivo' ? 0.6 : 1 }}>
+              <div key={u.id} style={{ display: 'grid', gridTemplateColumns: '1fr 100px 90px 90px 160px', padding: '12px 16px', alignItems: 'center', borderBottom: i < filtrados.length - 1 ? '1px solid #F1EFE8' : 'none', opacity: u.estado === 'inactivo' ? 0.6 : 1 }}>
                 <div>
                   <div style={{ fontSize: '13px', fontWeight: '500', color: '#1A1A18' }}>{u.nombre || '—'}</div>
-                  <div style={{ fontSize: '11px', color: '#888780', marginTop: '1px' }}>
+                  <div style={{ fontSize: '11px', color: '#888780', marginTop: '2px' }}>
                     {u.mail || u.telefono || ''}
                     {u.dni && ` · DNI: ${u.dni}`}
                     {u.fecha_nacimiento && ` · ${new Date(u.fecha_nacimiento).toLocaleDateString('es-AR')}`}
@@ -177,6 +195,12 @@ export default function Usuarios() {
                     <button onClick={() => setConfirmDesactivar(u)}
                       style={{ padding: '4px 8px', fontSize: '12px', borderRadius: '6px', border: '1px solid #F0C5B4', background: 'none', cursor: 'pointer', color: '#A32D2D' }}>
                       Desactivar
+                    </button>
+                  )}
+                  {u.estado === 'inactivo' && (
+                    <button onClick={() => setConfirmEliminar(u)}
+                      style={{ padding: '4px 8px', fontSize: '12px', borderRadius: '6px', border: '1px solid #F0C5B4', background: '#FFF0ED', cursor: 'pointer', color: '#A32D2D', fontWeight: '500' }}>
+                      Eliminar
                     </button>
                   )}
                 </div>
@@ -238,7 +262,13 @@ export default function Usuarios() {
                 placeholder="correo@ejemplo.com" style={inputStyle} />
             </div>
 
-            <div style={{ marginBottom: '14px' }}>             <label style={labelStyle}>Teléfono / Celular</label>             <input value={editando.telefono || ''} onChange={e => setEditando(ed => ({ ...ed, telefono: e.target.value }))}               placeholder="+54 11 0000-0000" style={inputStyle} />           </div>           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '14px' }}>
+            <div style={{ marginBottom: '14px' }}>
+              <label style={labelStyle}>Teléfono / Celular</label>
+              <input value={editando.telefono || ''} onChange={e => setEditando(ed => ({ ...ed, telefono: e.target.value }))}
+                placeholder="+54 11 0000-0000" style={inputStyle} />
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '14px' }}>
               <div>
                 <label style={labelStyle}>DNI</label>
                 <input value={editando.dni || ''} onChange={e => setEditando(ed => ({ ...ed, dni: e.target.value }))}
@@ -279,6 +309,30 @@ export default function Usuarios() {
               <button onClick={handleDesactivar} disabled={procesando}
                 style={{ flex: 2, height: '40px', borderRadius: '8px', border: 'none', background: procesando ? '#F0C5B4' : '#A32D2D', color: '#FFFFFF', cursor: procesando ? 'not-allowed' : 'pointer', fontSize: '13px', fontWeight: '500' }}>
                 {procesando ? 'Desactivando...' : 'Sí, desactivar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal eliminar */}
+      {confirmEliminar && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '24px' }}>
+          <div style={{ background: '#FFFFFF', borderRadius: '16px', padding: '28px', maxWidth: '400px', width: '100%', boxShadow: '0 8px 32px rgba(0,0,0,0.12)' }}>
+            <h3 style={{ fontFamily: 'Georgia, serif', fontSize: '18px', fontWeight: 'normal', margin: '0 0 8px' }}>Eliminar cantante</h3>
+            <p style={{ fontSize: '14px', color: '#5F5E5A', lineHeight: '1.6', margin: '0 0 8px' }}>
+              ¿Eliminás definitivamente a <strong>{confirmEliminar.nombre}</strong>?
+            </p>
+            <p style={{ fontSize: '12px', color: '#888780', margin: '0 0 24px', background: '#FCEBEB', padding: '8px 10px', borderRadius: '8px' }}>
+              Esta acción no se puede deshacer.
+            </p>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button onClick={() => setConfirmEliminar(null)} style={{ flex: 1, height: '40px', borderRadius: '8px', border: '1px solid #D3D1C7', background: 'none', cursor: 'pointer', fontSize: '13px' }}>
+                Cancelar
+              </button>
+              <button onClick={handleEliminar} disabled={procesando}
+                style={{ flex: 2, height: '40px', borderRadius: '8px', border: 'none', background: procesando ? '#F0C5B4' : '#A32D2D', color: '#FFFFFF', cursor: procesando ? 'not-allowed' : 'pointer', fontSize: '13px', fontWeight: '500' }}>
+                {procesando ? 'Eliminando...' : 'Sí, eliminar'}
               </button>
             </div>
           </div>
