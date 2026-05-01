@@ -43,44 +43,52 @@ export default function Usuarios() {
     u.rol?.toLowerCase().includes(busqueda.toLowerCase())
   )
 
+  const activos    = usuarios.filter(u => u.estado === 'activo').length
+  const pendientes = usuarios.filter(u => u.estado === 'pendiente').length
+
+  function actualizarLocal(id, cambios) {
+    setUsuarios(prev => prev.map(u => u.id === id ? { ...u, ...cambios } : u))
+  }
+
   async function guardarEdicion() {
     if (!editando) return
     setGuardando(true)
-    await supabase.from('perfiles').update({
+    const cambios = {
       rol: editando.rol,
       voz: editando.voz,
       estado: editando.estado,
       mail: editando.mail || null,
       fecha_nacimiento: editando.fecha_nacimiento || null,
       dni: editando.dni || null,
-    }).eq('id', editando.id)
+    }
+    await supabase.from('perfiles').update(cambios).eq('id', editando.id)
     setGuardando(false)
     setEditando(null)
+    actualizarLocal(editando.id, cambios)
     setMensaje('Usuario actualizado.')
     setTimeout(() => setMensaje(''), 3000)
-    cargar()
   }
 
   async function handleDesactivar() {
     if (!confirmDesactivar) return
     setProcesando(true)
     await supabase.from('perfiles').update({ estado: 'inactivo' }).eq('id', confirmDesactivar.id)
+    actualizarLocal(confirmDesactivar.id, { estado: 'inactivo' })
     setProcesando(false)
     setConfirmDesactivar(null)
     setMensaje('Cantante desactivado.')
     setTimeout(() => setMensaje(''), 3000)
-    cargar()
   }
 
   async function handleEliminar() {
     if (!confirmEliminar) return
     setProcesando(true)
     await supabase.from('perfiles').delete().eq('id', confirmEliminar.id)
+    setUsuarios(prev => prev.filter(u => u.id !== confirmEliminar.id))
     setProcesando(false)
     setConfirmEliminar(null)
-    setMensaje('Cantante eliminado.')
-    setTimeout(() => setMensaje(''), 3000)
-    cargar()
+    setMensaje('Cantante eliminado. Recordá borrarlo también de Supabase Auth.')
+    setTimeout(() => setMensaje(''), 5000)
   }
 
   return (
@@ -89,7 +97,16 @@ export default function Usuarios() {
         <div>
           <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '20px', fontWeight: 'normal', color: '#1A1A18', margin: '0 0 2px' }}>Cantantes</h2>
           <p style={{ fontSize: '12px', color: '#888780', margin: 0 }}>
-            {cargando ? 'Cargando...' : `${usuarios.length} cantante${usuarios.length !== 1 ? 's' : ''}`}
+            {cargando ? 'Cargando...' : (
+              <>
+                <span>{activos} activo{activos !== 1 ? 's' : ''}</span>
+                {pendientes > 0 && (
+                  <span style={{ color: '#D85A30', fontWeight: '500' }}>
+                    {' · '}{pendientes} en espera de activación
+                  </span>
+                )}
+              </>
+            )}
           </p>
         </div>
         {mensaje && <div style={{ fontSize: '13px', color: '#04342C', background: '#E1F5EE', padding: '6px 12px', borderRadius: '8px' }}>{mensaje}</div>}
@@ -119,14 +136,14 @@ export default function Usuarios() {
           {filtrados.map(u => {
             const rs = ROLE_STYLE[u.rol] || ROLE_STYLE.cantante
             return (
-              <div key={u.id} style={{ background: '#FFFFFF', border: '1px solid #E8E6DF', borderRadius: '12px', padding: '14px', opacity: u.estado === 'inactivo' ? 0.6 : 1 }}>
+              <div key={u.id} style={{ background: '#FFFFFF', border: u.estado === 'pendiente' ? '1px solid #F0C5B4' : '1px solid #E8E6DF', borderRadius: '12px', padding: '14px', opacity: u.estado === 'inactivo' ? 0.6 : 1 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
                   <div>
                     <div style={{ fontSize: '14px', fontWeight: '500', color: '#1A1A18' }}>{u.nombre || '—'}</div>
                     <div style={{ fontSize: '12px', color: '#888780', marginTop: '2px', textTransform: 'capitalize', display: 'flex', alignItems: 'center', gap: '6px' }}>
                       {u.voz || '—'}
-                      <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: u.estado === 'activo' ? '#639922' : '#D3D1C7', display: 'inline-block' }} />
-                      {u.estado}
+                      <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: u.estado === 'activo' ? '#639922' : u.estado === 'pendiente' ? '#D85A30' : '#D3D1C7', display: 'inline-block' }} />
+                      {u.estado === 'pendiente' ? <span style={{ color: '#D85A30', fontWeight: '500' }}>En espera</span> : u.estado}
                     </div>
                     {u.mail && <div style={{ fontSize: '11px', color: '#888780', marginTop: '2px' }}>{u.mail}</div>}
                     {u.dni && <div style={{ fontSize: '11px', color: '#888780' }}>DNI: {u.dni}</div>}
@@ -140,7 +157,7 @@ export default function Usuarios() {
                     style={{ padding: '5px 12px', fontSize: '12px', borderRadius: '6px', border: '1px solid #D3D1C7', background: 'none', cursor: 'pointer', color: '#0F6E56', fontWeight: '500' }}>
                     Editar
                   </button>
-                  {u.estado !== 'inactivo' && (
+                  {u.estado !== 'inactivo' && u.estado !== 'pendiente' && (
                     <button onClick={() => setConfirmDesactivar(u)}
                       style={{ padding: '5px 8px', fontSize: '12px', borderRadius: '6px', border: '1px solid #F0C5B4', background: 'none', cursor: 'pointer', color: '#A32D2D' }}>
                       Desactivar
@@ -148,7 +165,7 @@ export default function Usuarios() {
                   )}
                   {u.estado === 'inactivo' && (
                     <button onClick={() => setConfirmEliminar(u)}
-                      style={{ padding: '5px 8px', fontSize: '12px', borderRadius: '6px', border: '1px solid #F0C5B4', background: '#FFF0ED', cursor: 'pointer', color: '#A32D2D', fontWeight: '500' }}>
+                      style={{ padding: '5px 8px', fontSize: '12px', borderRadius: '6px', border: 'none', background: '#A32D2D', cursor: 'pointer', color: '#FFFFFF', fontWeight: '500' }}>
                       Eliminar
                     </button>
                   )}
@@ -159,22 +176,19 @@ export default function Usuarios() {
         </div>
       )}
 
-      {/* DESKTOP: tabla */}
+      {/* ESCRITORIO: filas */}
       {!cargando && !esMovil && (
-        <div style={{ background: '#FFFFFF', border: '1px solid #E8E6DF', borderRadius: '12px', overflow: 'hidden' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 100px 90px 90px 160px', padding: '10px 16px', background: '#F8F7F3', borderBottom: '1px solid #E8E6DF', fontSize: '11px', fontWeight: '600', color: '#888780', textTransform: 'uppercase', letterSpacing: '0.4px' }}>
-            <span>Nombre</span><span>Voz</span><span>Rol</span><span>Estado</span><span style={{ textAlign: 'right' }}>Acciones</span>
-          </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
           {filtrados.length === 0 && (
-            <div style={{ padding: '32px', textAlign: 'center', color: '#888780', fontSize: '13px' }}>No hay usuarios que coincidan.</div>
+            <div style={{ textAlign: 'center', padding: '32px', color: '#888780', fontSize: '13px' }}>No hay usuarios que coincidan.</div>
           )}
-          {filtrados.map((u, i) => {
+          {filtrados.map(u => {
             const rs = ROLE_STYLE[u.rol] || ROLE_STYLE.cantante
             return (
-              <div key={u.id} style={{ display: 'grid', gridTemplateColumns: '1fr 100px 90px 90px 160px', padding: '12px 16px', alignItems: 'center', borderBottom: i < filtrados.length - 1 ? '1px solid #F1EFE8' : 'none', opacity: u.estado === 'inactivo' ? 0.6 : 1 }}>
+              <div key={u.id} style={{ display: 'grid', gridTemplateColumns: '1fr 100px 90px 80px auto', alignItems: 'center', gap: '12px', background: '#FFFFFF', border: u.estado === 'pendiente' ? '1px solid #F0C5B4' : '1px solid #E8E6DF', borderRadius: '10px', padding: '10px 14px', opacity: u.estado === 'inactivo' ? 0.6 : 1 }}>
                 <div>
                   <div style={{ fontSize: '13px', fontWeight: '500', color: '#1A1A18' }}>{u.nombre || '—'}</div>
-                  <div style={{ fontSize: '11px', color: '#888780', marginTop: '2px' }}>
+                  <div style={{ fontSize: '11px', color: '#888780', marginTop: '1px' }}>
                     {u.mail || u.telefono || ''}
                     {u.dni && ` · DNI: ${u.dni}`}
                     {u.fecha_nacimiento && ` · ${new Date(u.fecha_nacimiento).toLocaleDateString('es-AR')}`}
@@ -182,16 +196,16 @@ export default function Usuarios() {
                 </div>
                 <span style={{ fontSize: '12px', color: '#5F5E5A', textTransform: 'capitalize' }}>{u.voz || '—'}</span>
                 <span style={{ background: rs.bg, color: rs.color, fontSize: '10px', fontWeight: '600', padding: '2px 8px', borderRadius: '10px', textTransform: 'capitalize', display: 'inline-block' }}>{u.rol}</span>
-                <span style={{ fontSize: '11px', color: u.estado === 'activo' ? '#27500A' : '#888780', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: u.estado === 'activo' ? '#639922' : '#D3D1C7', display: 'inline-block' }} />
-                  {u.estado}
+                <span style={{ fontSize: '11px', color: u.estado === 'activo' ? '#27500A' : u.estado === 'pendiente' ? '#D85A30' : '#888780', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: u.estado === 'activo' ? '#639922' : u.estado === 'pendiente' ? '#D85A30' : '#D3D1C7', display: 'inline-block' }} />
+                  {u.estado === 'pendiente' ? 'En espera' : u.estado}
                 </span>
                 <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
                   <button onClick={() => setEditando({ ...u })}
                     style={{ padding: '4px 10px', fontSize: '12px', borderRadius: '6px', border: '1px solid #D3D1C7', background: 'none', cursor: 'pointer', color: '#0F6E56', fontWeight: '500' }}>
                     Editar
                   </button>
-                  {u.estado !== 'inactivo' && (
+                  {u.estado !== 'inactivo' && u.estado !== 'pendiente' && (
                     <button onClick={() => setConfirmDesactivar(u)}
                       style={{ padding: '4px 8px', fontSize: '12px', borderRadius: '6px', border: '1px solid #F0C5B4', background: 'none', cursor: 'pointer', color: '#A32D2D' }}>
                       Desactivar
@@ -199,7 +213,7 @@ export default function Usuarios() {
                   )}
                   {u.estado === 'inactivo' && (
                     <button onClick={() => setConfirmEliminar(u)}
-                      style={{ padding: '4px 8px', fontSize: '12px', borderRadius: '6px', border: '1px solid #F0C5B4', background: '#FFF0ED', cursor: 'pointer', color: '#A32D2D', fontWeight: '500' }}>
+                      style={{ padding: '4px 8px', fontSize: '12px', borderRadius: '6px', border: 'none', background: '#A32D2D', cursor: 'pointer', color: '#FFFFFF', fontWeight: '500' }}>
                       Eliminar
                     </button>
                   )}
@@ -324,7 +338,7 @@ export default function Usuarios() {
               ¿Eliminás definitivamente a <strong>{confirmEliminar.nombre}</strong>?
             </p>
             <p style={{ fontSize: '12px', color: '#888780', margin: '0 0 24px', background: '#FCEBEB', padding: '8px 10px', borderRadius: '8px' }}>
-              Esta acción no se puede deshacer.
+              Esta acción no se puede deshacer. Recordá eliminar también el usuario en Supabase Auth.
             </p>
             <div style={{ display: 'flex', gap: '10px' }}>
               <button onClick={() => setConfirmEliminar(null)} style={{ flex: 1, height: '40px', borderRadius: '8px', border: '1px solid #D3D1C7', background: 'none', cursor: 'pointer', fontSize: '13px' }}>
