@@ -86,7 +86,7 @@ export default function Inicio() {
 
         <Seccion titulo="Últimos avisos" linkLabel="Ver todos" onLink={() => navigate('/avisos')}>
           {avisosRecientes.length === 0 ? <Vacio texto="Sin avisos recientes." /> : avisosRecientes.map(aviso => (
-            <ItemAviso key={aviso.id} aviso={aviso} />
+            <ItemAviso key={aviso.id} aviso={aviso} onClick={() => navigate("/avisos")} />
           ))}
         </Seccion>
 
@@ -152,10 +152,10 @@ function ItemObra({ obra, onClick, vozUsuario }) {
   )
 }
 
-function ItemAviso({ aviso }) {
+function ItemAviso({ aviso, onClick }) {
   const tc = TIPO_AVISO[aviso.tipo] || TIPO_AVISO.material
   return (
-    <div style={{ padding: '8px 0', borderBottom: '1px solid #F1EFE8', display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
+    <div onClick={onClick} style={{ padding: '8px 0', borderBottom: '1px solid #F1EFE8', display: 'flex', gap: '8px', alignItems: 'flex-start', cursor: 'pointer' }}>
       <div style={{ width: '7px', height: '7px', borderRadius: '50%', background: aviso.leido ? '#D3D1C7' : tc.dot, marginTop: '5px', flexShrink: 0 }} />
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: '13px', fontWeight: aviso.leido ? '400' : '500', color: '#1A1A18', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{aviso.titulo}</div>
