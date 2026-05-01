@@ -5,7 +5,7 @@ import { useAuth } from '../../hooks/useAuth'
 
 const ESTADOS = [
   { valor: '',          label: 'Todas' },
-  { valor: 'concierto', label: 'Próximo concierto' },
+  { valor: 'concierto', label: 'Próximo ensayo' },
   { valor: 'estudio',   label: 'En estudio' },
   { valor: 'activo',    label: 'Repertorio activo' },
 ]
@@ -13,7 +13,7 @@ const ESTADOS = [
 const BADGE = {
   estudio:   { bg: '#E1F5EE', color: '#04342C', txt: 'En estudio' },
   activo:    { bg: '#EAF3DE', color: '#27500A', txt: 'Repertorio activo' },
-  concierto: { bg: '#FAECE7', color: '#712B13', txt: 'Próximo concierto' },
+  concierto: { bg: '#FAECE7', color: '#712B13', txt: 'Próximo ensayo' },
   archivado: { bg: '#F1EFE8', color: '#888780', txt: 'Archivado' },
 }
 
