@@ -8,9 +8,9 @@ import {
 
 const FILTROS = [
   { valor: '',         label: 'Todos' },
-  { valor: 'material', label: 'Material' },
-  { valor: 'horario',  label: 'Horarios' },
-  { valor: 'evento',   label: 'Eventos' },
+  { valor: 'material', label: 'Nuevo material' },
+  { valor: 'horario',  label: 'Cambio de horario' },
+  { valor: 'evento',   label: 'Evento' },
   { valor: 'urgente',  label: 'Urgente' },
 ]
 
@@ -18,11 +18,8 @@ export default function Avisos() {
   const navigate       = useNavigate()
   const { perfil }     = useAuth()
   const [tipo, setTipo] = useState('')
-  const [soloNoLeidos, setSoloNoLeidos] = useState(false)
   const [avisoAbierto, setAvisoAbierto] = useState(null)
   const { avisos, cargando, error, noLeidos, recargar } = useAvisos({ tipo: tipo || undefined })
-
-  const avisosFiltrados = soloNoLeidos ? avisos.filter(a => !a.leido) : avisos
 
   async function handleAbrir(aviso) {
     if (!aviso.leido && perfil) {
@@ -80,16 +77,6 @@ export default function Avisos() {
             {f.label}
           </button>
         ))}
-        <button onClick={() => setSoloNoLeidos(v => !v)} style={{
-          padding: '4px 12px', borderRadius: '20px', fontSize: '12px', cursor: 'pointer',
-          border: `1px solid ${soloNoLeidos ? '#D85A30' : '#D3D1C7'}`,
-          background: soloNoLeidos ? '#FAECE7' : 'none',
-          color: soloNoLeidos ? '#712B13' : '#5F5E5A',
-          fontWeight: soloNoLeidos ? '500' : '400',
-          marginLeft: 'auto',
-        }}>
-          Solo no leídos
-        </button>
       </div>
 
       {error && (
@@ -108,26 +95,19 @@ export default function Avisos() {
         </div>
       )}
 
-      {!cargando && avisosFiltrados.length === 0 && (
+      {!cargando && avisos.length === 0 && (
         <div style={{ textAlign: 'center', padding: '56px 24px', color: '#888780' }}>
           <svg width="44" height="44" viewBox="0 0 24 24" fill="#D3D1C7" style={{ marginBottom: '14px' }}>
             <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/>
           </svg>
-          <p style={{ fontSize: '14px', margin: '0 0 8px' }}>
-            {soloNoLeidos ? 'No tenés avisos sin leer.' : 'No hay avisos todavía.'}
-          </p>
-          {soloNoLeidos && (
-            <button onClick={() => setSoloNoLeidos(false)} style={{ fontSize: '12px', color: '#0F6E56', background: 'none', border: 'none', cursor: 'pointer', fontWeight: '500' }}>
-              Ver todos los avisos
-            </button>
-          )}
+          <p style={{ fontSize: '14px', margin: '0 0 8px' }}>No hay avisos todavía.</p>
         </div>
       )}
 
       {/* Lista */}
       {!cargando && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          {avisosFiltrados.map(aviso => {
+          {avisos.map(aviso => {
             const tc = TIPO_AVISO[aviso.tipo] || TIPO_AVISO.material
             const tieneDestino = aviso.obra_id || aviso.evento_id
             const estaAbierto = avisoAbierto?.id === aviso.id
