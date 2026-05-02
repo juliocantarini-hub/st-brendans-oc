@@ -41,7 +41,6 @@ export default function Login() {
     setErrorGlobal('')
     setCargandoGoogle(true)
     await loginConGoogle()
-    // loginConGoogle redirige al proveedor, no necesita navigate
     setCargandoGoogle(false)
   }
 
@@ -81,23 +80,10 @@ export default function Login() {
           />
         </Campo>
 
-        <div style={{ textAlign: 'right', marginTop: '-8px', marginBottom: '20px' }}>
-          <Link to="/recuperar" style={{
-            fontSize: '12px', color: '#0F6E56',
-            textDecoration: 'none', fontWeight: '500',
-          }}>
-            ¿Olvidaste tu contraseña?
-          </Link>
-        </div>
-
         <Boton type="submit" cargando={cargando}>
           Entrar
         </Boton>
       </form>
-
-      {/*<Divisor texto="o continuar con" />*/}
-
-      {/*{/*{/*<BotonGoogle onClick={handleGoogle} cargando={cargandoGoogle} />*/}
 
       <p style={{
         textAlign: 'center', fontSize: '13px',
@@ -113,9 +99,11 @@ export default function Login() {
 
       <p style={{
         textAlign: 'center', fontSize: '12px',
-        color: '#B4B2A9', marginTop: '16px', marginBottom: 0,
+        color: '#B4B2A9', marginTop: '16px', marginBottom: 0, lineHeight: '1.8',
       }}>
-        ¿Necesitás ayuda? Contactá a tu director.
+        ¿Necesitás ayuda?<br />
+        <span style={{ color: '#0F6E56', fontWeight: '500' }}>¿Olvidaste tu contraseña?</span><br />
+        Contactá a tu director.
       </p>
     </AuthLayout>
   )
