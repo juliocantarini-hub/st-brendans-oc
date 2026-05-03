@@ -44,10 +44,12 @@ function useAuthLogic() {
 
   async function cargarPerfil(userId) {
     try {
+      const coro = await getCoroActual()
       const { data, error } = await supabase
         .from('perfiles')
         .select('*')
         .eq('id', userId)
+        .eq('coro_id', coro.id)
         .single()
 
       if (error) throw error
@@ -58,7 +60,7 @@ function useAuthLogic() {
       if (!data.voz && meta?.voz) updates.voz = meta.voz
       if (!data.mail) updates.mail = authData?.user?.email
       if (Object.keys(updates).length > 0) {
-        await supabase.from('perfiles').update(updates).eq('id', userId)
+        await supabase.from('perfiles').update(updates).eq('id', userId).eq('coro_id', coro.id)
         Object.assign(data, updates)
       }
 
@@ -156,10 +158,12 @@ function useAuthLogic() {
 
   async function actualizarPerfil(datos) {
     if (!usuario) return { ok: false, error: 'No hay sesión activa' }
+    const coro = await getCoroActual()
     const { data, error } = await supabase
       .from('perfiles')
       .update({ ...datos, actualizado_en: new Date().toISOString() })
       .eq('id', usuario.id)
+      .eq('coro_id', coro.id)
       .select()
       .single()
     if (error) return { ok: false, error: error.message }

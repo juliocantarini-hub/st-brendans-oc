@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../../lib/supabase'
+import { getCoroActual } from '../../lib/coro'
 
 const ROLES   = ['cantante', 'director', 'admin']
 const VOCES   = ['soprano', 'contralto', 'tenor', 'bajo']
@@ -29,11 +30,18 @@ export default function Usuarios() {
   const [nuevaPass, setNuevaPass]   = useState('')
   const [confirmarPass, setConfirmarPass] = useState('')
   const [resetando, setResetando]   = useState(false)
+  const [coroId, setCoroId]         = useState(null)
   const esMovil = useEsMovil()
 
   const cargar = useCallback(async () => {
     setCargando(true)
-    const { data } = await supabase.from('perfiles').select('*').order('nombre')
+    const coro = await getCoroActual()
+    setCoroId(coro.id)
+    const { data } = await supabase
+      .from('perfiles')
+      .select('*')
+      .eq('coro_id', coro.id)
+      .order('nombre')
     setUsuarios(data || [])
     setCargando(false)
   }, [])
@@ -69,7 +77,7 @@ export default function Usuarios() {
       fecha_nacimiento: editando.fecha_nacimiento || null,
       dni: editando.dni || null,
     }
-    await supabase.from('perfiles').update(cambios).eq('id', editando.id)
+    await supabase.from('perfiles').update(cambios).eq('id', editando.id).eq('coro_id', coroId)
     setGuardando(false)
     setEditando(null)
     actualizarLocal(editando.id, cambios)
@@ -80,7 +88,7 @@ export default function Usuarios() {
   async function handleDesactivar() {
     if (!confirmDesactivar) return
     setProcesando(true)
-    await supabase.from('perfiles').update({ estado: 'inactivo' }).eq('id', confirmDesactivar.id)
+    await supabase.from('perfiles').update({ estado: 'inactivo' }).eq('id', confirmDesactivar.id).eq('coro_id', coroId)
     actualizarLocal(confirmDesactivar.id, { estado: 'inactivo' })
     setProcesando(false)
     setConfirmDesactivar(null)
@@ -91,7 +99,7 @@ export default function Usuarios() {
   async function handleEliminar() {
     if (!confirmEliminar) return
     setProcesando(true)
-    await supabase.from('perfiles').delete().eq('id', confirmEliminar.id)
+    await supabase.from('perfiles').delete().eq('id', confirmEliminar.id).eq('coro_id', coroId)
     setUsuarios(prev => prev.filter(u => u.id !== confirmEliminar.id))
     setProcesando(false)
     setConfirmEliminar(null)
@@ -296,25 +304,21 @@ export default function Usuarios() {
           <div style={{ background: '#FFFFFF', borderRadius: '16px', padding: '28px', maxWidth: '400px', width: '100%', boxShadow: '0 8px 32px rgba(0,0,0,0.12)' }}>
             <h3 style={{ fontFamily: 'Georgia, serif', fontSize: '18px', fontWeight: 'normal', margin: '0 0 4px' }}>Resetear contraseña</h3>
             <p style={{ fontSize: '13px', color: '#888780', margin: '0 0 20px' }}>{resetPass.nombre}</p>
-
             <div style={{ marginBottom: '14px' }}>
               <label style={labelStyle}>Nueva contraseña</label>
               <input type="password" value={nuevaPass} onChange={e => setNuevaPass(e.target.value)}
                 placeholder="Mínimo 6 caracteres" style={inputStyle} />
             </div>
-
             <div style={{ marginBottom: '20px' }}>
               <label style={labelStyle}>Confirmar contraseña</label>
               <input type="password" value={confirmarPass} onChange={e => setConfirmarPass(e.target.value)}
                 placeholder="Repetí la contraseña" style={inputStyle} />
             </div>
-
             {nuevaPass && confirmarPass && nuevaPass !== confirmarPass && (
               <p style={{ fontSize: '12px', color: '#A32D2D', margin: '-12px 0 16px', background: '#FCEBEB', padding: '6px 10px', borderRadius: '6px' }}>
                 Las contraseñas no coinciden.
               </p>
             )}
-
             <div style={{ display: 'flex', gap: '10px' }}>
               <button onClick={() => { setResetPass(null); setNuevaPass(''); setConfirmarPass('') }}
                 style={{ flex: 1, height: '40px', borderRadius: '8px', border: '1px solid #D3D1C7', background: 'none', cursor: 'pointer', fontSize: '13px' }}>
@@ -335,7 +339,6 @@ export default function Usuarios() {
           <div style={{ background: '#FFFFFF', borderRadius: '16px', padding: '28px', maxWidth: '440px', width: '100%', boxShadow: '0 8px 32px rgba(0,0,0,0.12)', margin: 'auto' }}>
             <h3 style={{ fontFamily: 'Georgia, serif', fontSize: '18px', fontWeight: 'normal', margin: '0 0 4px' }}>Editar usuario</h3>
             <p style={{ fontSize: '13px', color: '#888780', margin: '0 0 16px' }}>{editando.nombre}</p>
-
             <div style={{ marginBottom: '14px' }}>
               <label style={labelStyle}>Voz</label>
               <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
@@ -347,7 +350,6 @@ export default function Usuarios() {
                 ))}
               </div>
             </div>
-
             <div style={{ marginBottom: '14px' }}>
               <label style={labelStyle}>Rol</label>
               <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
@@ -362,7 +364,6 @@ export default function Usuarios() {
                 })}
               </div>
             </div>
-
             <div style={{ marginBottom: '14px' }}>
               <label style={labelStyle}>Estado</label>
               <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
@@ -374,19 +375,16 @@ export default function Usuarios() {
                 ))}
               </div>
             </div>
-
             <div style={{ marginBottom: '14px' }}>
               <label style={labelStyle}>Correo electrónico</label>
               <input value={editando.mail || ''} onChange={e => setEditando(ed => ({ ...ed, mail: e.target.value }))}
                 placeholder="correo@ejemplo.com" style={inputStyle} />
             </div>
-
             <div style={{ marginBottom: '14px' }}>
               <label style={labelStyle}>Teléfono / Celular</label>
               <input value={editando.telefono || ''} onChange={e => setEditando(ed => ({ ...ed, telefono: e.target.value }))}
                 placeholder="+54 11 0000-0000" style={inputStyle} />
             </div>
-
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '14px' }}>
               <div>
                 <label style={labelStyle}>DNI</label>
@@ -399,7 +397,6 @@ export default function Usuarios() {
                   style={inputStyle} />
               </div>
             </div>
-
             <div style={{ display: 'flex', gap: '10px', marginTop: '8px' }}>
               <button onClick={() => setEditando(null)} style={{ flex: 1, height: '40px', borderRadius: '8px', border: '1px solid #D3D1C7', background: 'none', cursor: 'pointer', fontSize: '13px' }}>Cancelar</button>
               <button onClick={guardarEdicion} disabled={guardando} style={{ flex: 2, height: '40px', borderRadius: '8px', border: 'none', background: '#0F6E56', color: '#FFFFFF', cursor: 'pointer', fontSize: '13px', fontWeight: '500' }}>

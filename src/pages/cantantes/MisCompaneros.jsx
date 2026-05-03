@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../hooks/useAuth'
+import { getCoroActual } from '../../lib/coro'
 
 function calcularEdad(fechaNacimiento) {
   if (!fechaNacimiento) return null
@@ -44,16 +45,19 @@ export default function MisCompaneros() {
   const [vozFiltro, setVozFiltro] = useState('')
 
   useEffect(() => {
-    supabase
-      .from('perfiles')
-      .select('id, nombre, voz, telefono, fecha_nacimiento')
-      .eq('estado', 'activo')
-      .neq('rol', 'admin')
-      .order('nombre')
-      .then(({ data }) => {
-        setCantantes(data || [])
-        setCargando(false)
-      })
+    async function cargar() {
+      const coro = await getCoroActual()
+      const { data } = await supabase
+        .from('perfiles')
+        .select('id, nombre, voz, telefono, fecha_nacimiento')
+        .eq('coro_id', coro.id)
+        .eq('estado', 'activo')
+        .neq('rol', 'admin')
+        .order('nombre')
+      setCantantes(data || [])
+      setCargando(false)
+    }
+    cargar()
   }, [])
 
   const hoy = new Date()
