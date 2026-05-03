@@ -45,6 +45,10 @@ function useAuthLogic() {
   async function cargarPerfil(userId) {
     try {
       const coro = await getCoroActual()
+
+      // Setear el coro activo en la sesión de Supabase
+      await supabase.rpc('set_coro_activo', { p_coro_id: coro.id })
+
       const { data, error } = await supabase
         .from('perfiles')
         .select('*')
