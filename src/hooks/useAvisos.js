@@ -12,9 +12,11 @@ export function useAvisos(filtros = {}) {
     setCargando(true)
     setError(null)
     try {
+      const coro = await getCoroActual()
       let query = supabase
         .from('avisos')
         .select(`*, avisos_leidos!left(leido_en, perfil_id), obras(id, titulo), eventos(id, titulo)`)
+        .eq('coro_id', coro.id)
         .eq('publicado', true)
         .order('creado_en', { ascending: false })
 
@@ -23,11 +25,7 @@ export function useAvisos(filtros = {}) {
       const { data, error: err } = await query
       if (err) throw err
 
-      const lista = (data || []).map(a => ({
-        ...a,
-        leido: a.avisos_leidos?.length > 0,
-      }))
-
+      const lista = (data || []).map(a => ({ ...a, leido: a.avisos_leidos?.length > 0 }))
       setAvisos(lista)
       setNoLeidos(lista.filter(a => !a.leido).length)
     } catch (err) {
@@ -45,10 +43,7 @@ export function useAvisos(filtros = {}) {
 export async function marcarLeido(avisoId, perfilId) {
   const { error } = await supabase
     .from('avisos_leidos')
-    .upsert(
-      { aviso_id: avisoId, perfil_id: perfilId },
-      { onConflict: 'aviso_id,perfil_id' }
-    )
+    .upsert({ aviso_id: avisoId, perfil_id: perfilId }, { onConflict: 'aviso_id,perfil_id' })
   return { ok: !error }
 }
 
@@ -68,9 +63,11 @@ export function useAvisosAdmin() {
 
   const cargar = useCallback(async () => {
     setCargando(true)
+    const coro = await getCoroActual()
     const { data, error: err } = await supabase
       .from('avisos')
       .select('*, obras(titulo), eventos(titulo), avisos_leidos(perfil_id)')
+      .eq('coro_id', coro.id)
       .order('creado_en', { ascending: false })
     if (err) { setError(err.message); setCargando(false); return }
     setAvisos(data || [])
@@ -102,10 +99,7 @@ export async function actualizarAviso(id, datos) {
 }
 
 export async function publicarAviso(id, publicado) {
-  const { error } = await supabase
-    .from('avisos')
-    .update({ publicado })
-    .eq('id', id)
+  const { error } = await supabase.from('avisos').update({ publicado }).eq('id', id)
   return { ok: !error, error: error?.message }
 }
 

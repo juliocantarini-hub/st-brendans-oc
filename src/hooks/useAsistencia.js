@@ -9,9 +9,11 @@ export function useListasAsistencia() {
 
   const cargar = useCallback(async () => {
     setCargando(true)
+    const coro = await getCoroActual()
     const { data, error: err } = await supabase
       .from('listas_asistencia')
       .select(`*, registros_asistencia(estado, perfil_id)`)
+      .eq('coro_id', coro.id)
       .order('fecha', { ascending: false })
     if (err) { setError(err.message); setCargando(false); return }
     setListas(data || [])
@@ -50,9 +52,10 @@ export function useRegistrosLista(listaId) {
   const cargar = useCallback(async () => {
     if (!listaId) return
     setCargando(true)
+    const coro = await getCoroActual()
     const [{ data: regs }, { data: cants }] = await Promise.all([
       supabase.from('registros_asistencia').select('*').eq('lista_id', listaId),
-      supabase.from('perfiles').select('id, nombre, voz').eq('estado', 'activo').order('nombre'),
+      supabase.from('perfiles').select('id, nombre, voz').eq('coro_id', coro.id).eq('estado', 'activo').order('nombre'),
     ])
     setRegistros(regs || [])
     setCantantes(cants || [])
@@ -86,7 +89,11 @@ export async function marcarAsistencia(listaId, perfilId, estado, nota = null) {
 }
 
 export async function resetearAsistencia() {
-  const { error } = await supabase.from('listas_asistencia').delete().neq('id', '00000000-0000-0000-0000-000000000000')
+  const coro = await getCoroActual()
+  const { error } = await supabase
+    .from('listas_asistencia')
+    .delete()
+    .eq('coro_id', coro.id)
   return { ok: !error, error: error?.message }
 }
 

@@ -1,19 +1,21 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
+import { getCoroActual } from '../../lib/coro'
 
 export default function AdminDashboard() {
   const navigate = useNavigate()
-  const [stats, setStats]     = useState(null)
+  const [stats, setStats]       = useState(null)
   const [cargando, setCargando] = useState(true)
 
   useEffect(() => {
     async function cargar() {
+      const coro = await getCoroActual()
       const [usuarios, obras, eventos, avisos, asistencias] = await Promise.all([
-        supabase.from('perfiles').select('id, rol, estado', { count: 'exact' }),
-        supabase.from('obras').select('id, publicada', { count: 'exact' }),
-        supabase.from('eventos').select('id, publicado, fecha_inicio').gte('fecha_inicio', new Date().toISOString()),
-        supabase.from('avisos').select('id, publicado', { count: 'exact' }),
+        supabase.from('perfiles').select('id, rol, estado', { count: 'exact' }).eq('coro_id', coro.id),
+        supabase.from('obras').select('id, publicada', { count: 'exact' }).eq('coro_id', coro.id),
+        supabase.from('eventos').select('id, publicado, fecha_inicio').eq('coro_id', coro.id).gte('fecha_inicio', new Date().toISOString()),
+        supabase.from('avisos').select('id, publicado', { count: 'exact' }).eq('coro_id', coro.id),
         supabase.from('asistencias').select('estado').eq('estado', 'pendiente'),
       ])
       setStats({
@@ -46,7 +48,6 @@ export default function AdminDashboard() {
         Resumen del estado del coro
       </p>
 
-      {/* Stats */}
       {cargando ? (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '24px' }}>
           {[1,2,3,4].map(i => <div key={i} style={{ height: '80px', background: '#F1EFE8', borderRadius: '12px', animation: 'pulse 1.5s ease-in-out infinite' }} />)}
@@ -61,7 +62,6 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* Acciones rápidas */}
       <div style={{ marginBottom: '24px' }}>
         <h3 style={{ fontSize: '12px', fontWeight: '600', color: '#5F5E5A', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 12px' }}>
           Acciones rápidas
@@ -80,17 +80,16 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* Links de gestión */}
       <div>
         <h3 style={{ fontSize: '12px', fontWeight: '600', color: '#5F5E5A', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 12px' }}>
           Gestión
         </h3>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
           {[
-            { label: 'Usuarios y roles',    sub: `${stats?.totalUsuarios || '—'} registrados`,      ruta: '/admin/usuarios' },
-            { label: 'Obras y repertorio',  sub: `${stats?.totalObras || '—'} obras en total`,       ruta: '/admin/obras' },
-            { label: 'Eventos y ensayos',   sub: `${stats?.eventosFuturos || '—'} próximos`,         ruta: '/admin/eventos' },
-            { label: 'Avisos publicados',   sub: `${stats?.avisosPublicados || '—'} publicados`,     ruta: '/admin/avisos' },
+            { label: 'Usuarios y roles',   sub: `${stats?.totalUsuarios || '—'} registrados`,  ruta: '/admin/usuarios' },
+            { label: 'Obras y repertorio', sub: `${stats?.totalObras || '—'} obras en total`,   ruta: '/admin/obras' },
+            { label: 'Eventos y ensayos',  sub: `${stats?.eventosFuturos || '—'} próximos`,     ruta: '/admin/eventos' },
+            { label: 'Avisos publicados',  sub: `${stats?.avisosPublicados || '—'} publicados`, ruta: '/admin/avisos' },
           ].map(item => (
             <div key={item.ruta} onClick={() => navigate(item.ruta)}
               style={{ background: '#FFFFFF', border: '1px solid #E8E6DF', borderRadius: '12px', padding: '14px 16px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', transition: 'border-color 0.12s' }}
