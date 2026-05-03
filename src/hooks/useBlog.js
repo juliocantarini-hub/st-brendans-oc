@@ -1,4 +1,3 @@
-// v2
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 import { getCoroActual } from '../lib/coro'
@@ -12,17 +11,17 @@ export function useArticulos(filtros = {}) {
     setCargando(true)
     setError(null)
     try {
+      const coro = await getCoroActual()
       let query = supabase
         .from('textos')
         .select(`*, perfiles(nombre)`)
+        .eq('coro_id', coro.id)
         .eq('publicado', true)
         .order('creado_en', { ascending: false })
 
       if (filtros.categoria) query = query.eq('categoria', filtros.categoria)
       if (filtros.busqueda) {
-        query = query.or(
-          `titulo.ilike.%${filtros.busqueda}%,resumen.ilike.%${filtros.busqueda}%`
-        )
+        query = query.or(`titulo.ilike.%${filtros.busqueda}%,resumen.ilike.%${filtros.busqueda}%`)
       }
       if (filtros.limite) query = query.limit(filtros.limite)
 
@@ -49,17 +48,20 @@ export function useArticulo(id) {
   useEffect(() => {
     if (!id) return
     setCargando(true)
-    supabase
-      .from('textos')
-      .select('*, perfiles(nombre)')
-      .eq('id', id)
-      .eq('publicado', true)
-      .single()
-      .then(({ data, error: err }) => {
-        if (err) { setError('Texto no encontrado.'); setCargando(false); return }
-        setArticulo(data)
-        setCargando(false)
-      })
+    async function cargar() {
+      const coro = await getCoroActual()
+      const { data, error: err } = await supabase
+        .from('textos')
+        .select('*, perfiles(nombre)')
+        .eq('id', id)
+        .eq('coro_id', coro.id)
+        .eq('publicado', true)
+        .single()
+      if (err) { setError('Texto no encontrado.'); setCargando(false); return }
+      setArticulo(data)
+      setCargando(false)
+    }
+    cargar()
   }, [id])
 
   return { articulo, cargando, error }
@@ -72,9 +74,11 @@ export function useArticulosAdmin() {
 
   const cargar = useCallback(async () => {
     setCargando(true)
+    const coro = await getCoroActual()
     const { data, error: err } = await supabase
       .from('textos')
       .select(`*, perfiles(nombre)`)
+      .eq('coro_id', coro.id)
       .order('creado_en', { ascending: false })
     if (err) { setError(err.message); setCargando(false); return }
     setArticulos(data || [])

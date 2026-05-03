@@ -13,20 +13,17 @@ export function useObras(filtros = {}) {
     setCargando(true)
     setError(null)
     try {
+      const coro = await getCoroActual()
       let query = supabase
         .from('obras')
-        .select(`
-          *,
-          progreso_estudio!left(estado)
-        `)
+        .select(`*, progreso_estudio!left(estado)`)
+        .eq('coro_id', coro.id)
         .eq('publicada', true)
         .order('orden', { ascending: true }).order('titulo')
 
       if (filtros.estado)   query = query.eq('estado', filtros.estado)
       if (filtros.busqueda) {
-        query = query.or(
-          `titulo.ilike.%${filtros.busqueda}%,compositor.ilike.%${filtros.busqueda}%`
-        )
+        query = query.or(`titulo.ilike.%${filtros.busqueda}%,compositor.ilike.%${filtros.busqueda}%`)
       }
 
       const { data, error: err } = await query
@@ -59,14 +56,12 @@ export function useObra(id) {
     if (!id) return
     async function cargar() {
       setCargando(true)
+      const coro = await getCoroActual()
       const { data, error: err } = await supabase
         .from('obras')
-        .select(`
-          *,
-          progreso_estudio!left(estado),
-          eventos_obras(evento_id, orden, eventos(id, titulo, fecha_inicio))
-        `)
+        .select(`*, progreso_estudio!left(estado), eventos_obras(evento_id, orden, eventos(id, titulo, fecha_inicio))`)
         .eq('id', id)
+        .eq('coro_id', coro.id)
         .eq('publicada', true)
         .single()
 
@@ -140,9 +135,11 @@ export function useObrasAdmin() {
 
   const cargar = useCallback(async () => {
     setCargando(true)
+    const coro = await getCoroActual()
     const { data, error: err } = await supabase
       .from('obras')
       .select('*')
+      .eq('coro_id', coro.id)
       .order('orden', { ascending: true }).order('creado_en', { ascending: false })
     if (err) { setError(err.message); setCargando(false); return }
     setObras(data || [])
