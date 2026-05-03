@@ -14,7 +14,7 @@ export function useArticulos(filtros = {}) {
       const coro = await getCoroActual()
       let query = supabase
         .from('textos')
-        .select(`*, perfiles(nombre)`)
+        .select('*')
         .eq('coro_id', coro.id)
         .eq('publicado', true)
         .order('creado_en', { ascending: false })
@@ -52,7 +52,7 @@ export function useArticulo(id) {
       const coro = await getCoroActual()
       const { data, error: err } = await supabase
         .from('textos')
-        .select('*, perfiles(nombre)')
+        .select('*')
         .eq('id', id)
         .eq('coro_id', coro.id)
         .eq('publicado', true)
@@ -77,7 +77,7 @@ export function useArticulosAdmin() {
     const coro = await getCoroActual()
     const { data, error: err } = await supabase
       .from('textos')
-      .select(`*, perfiles(nombre)`)
+      .select('*')
       .eq('coro_id', coro.id)
       .order('creado_en', { ascending: false })
     if (err) { setError(err.message); setCargando(false); return }
