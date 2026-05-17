@@ -60,43 +60,51 @@ export default function ObraForm() {
   const [publicada, setPublicada] = useState(false)
 
   useEffect(() => {
-    if (!esEdicion) return
-    supabase
+  if (!esEdicion) return
+  async function cargar() {
+    const { data, error } = await supabase
       .from('obras')
-      .select('*, obras_audios(id, voz, parte, drive_id, etiqueta)')
+      .select('*')
       .eq('id', id)
       .single()
-      .then(({ data, error }) => {
-        if (error || !data) { setErrorGlobal('No se pudo cargar la obra.'); return }
-        setForm({
-          titulo:            data.titulo || '',
-          compositor:        data.compositor || '',
-          estado:            data.estado || 'estudio',
-          descripcion:       data.descripcion || '',
-          notas_director:    data.notas_director || '',
-          drive_partitura_id: data.drive_partitura_id || '',
-        })
-        setPublicada(data.publicada || false)
 
-        if (data.obras_audios?.length) {
-          const ordenVoz = { general: 0, soprano: 1, contralto: 2, tenor: 3, bajo: 4 }
-          const cargados = [...data.obras_audios]
-            .sort((a, b) => {
-              const diff = (ordenVoz[a.voz] ?? 99) - (ordenVoz[b.voz] ?? 99)
-              return diff !== 0 ? diff : a.parte - b.parte
-            })
-            .map(a => ({
-              _key:     `${a.voz}-${a.parte}`,
-              voz:      a.voz,
-              parte:    a.parte,
-              drive_id: a.drive_id || '',
-              etiqueta: a.etiqueta || '',
-            }))
-          setAudios(cargados)
-        }
-        setCargando(false)
-      })
-  }, [id, esEdicion])
+    if (error || !data) { setErrorGlobal('No se pudo cargar la obra.'); setCargando(false); return }
+
+    setForm({
+      titulo:             data.titulo || '',
+      compositor:         data.compositor || '',
+      estado:             data.estado || 'estudio',
+      descripcion:        data.descripcion || '',
+      notas_director:     data.notas_director || '',
+      drive_partitura_id: data.drive_partitura_id || '',
+    })
+    setPublicada(data.publicada || false)
+
+    const { data: audiosData } = await supabase
+      .from('obras_audios')
+      .select('id, voz, parte, drive_id, etiqueta')
+      .eq('obra_id', id)
+
+    if (audiosData?.length) {
+      const ordenVoz = { general: 0, soprano: 1, contralto: 2, tenor: 3, bajo: 4 }
+      const cargados = [...audiosData]
+        .sort((a, b) => {
+          const diff = (ordenVoz[a.voz] ?? 99) - (ordenVoz[b.voz] ?? 99)
+          return diff !== 0 ? diff : a.parte - b.parte
+        })
+        .map(a => ({
+          _key:     `${a.voz}-${a.parte}`,
+          voz:      a.voz,
+          parte:    a.parte,
+          drive_id: a.drive_id || '',
+          etiqueta: a.etiqueta || '',
+        }))
+      setAudios(cargados)
+    }
+    setCargando(false)
+  }
+  cargar()
+}, [id, esEdicion])
 
   // ── Form handlers ──
   function setField(campo) {
