@@ -5,15 +5,24 @@ import { useObrasAdmin, publicarObra, eliminarObra } from '../../hooks/useObras'
 const BADGE = {
   estudio:   { bg: '#E1F5EE', color: '#04342C', txt: 'En estudio' },
   activo:    { bg: '#EAF3DE', color: '#27500A', txt: 'Activo' },
-  concierto: { bg: '#FAECE7', color: '#712B13', txt: 'Próximo ensayo' },
+  concierto: { bg: '#FAECE7', color: '#712B13', txt: 'Próximo concierto' },
   archivado: { bg: '#F1EFE8', color: '#888780', txt: 'Archivado' },
 }
 
 const ORDEN_ESTADO = { concierto: 0, estudio: 1, activo: 2, archivado: 3 }
 
 function contarMateriales(obra) {
-  const campos = ['drive_partitura_id','drive_audio_general','drive_audio_soprano','drive_audio_contralto','drive_audio_tenor','drive_audio_bajo']
-  return campos.filter(c => !!obra[c]).length
+  const tienePartitura = !!obra.drive_partitura_id ? 1 : 0
+  const totalAudios = obra.audios?.length || 0
+  return tienePartitura + totalAudios
+}
+
+function totalMaterialesLabel(obra) {
+  const tienePartitura = !!obra.drive_partitura_id ? 1 : 0
+  const totalAudios = obra.audios?.length || 0
+  const total = tienePartitura + totalAudios
+  const maximo = 1 + totalAudios // partitura + todos los audios que tiene
+  return { total, maximo }
 }
 
 function useEsMovil() {
@@ -102,7 +111,7 @@ export default function ObrasLista() {
           )}
           {obrasFiltradas.map(obra => {
             const badge = BADGE[obra.estado] || BADGE.archivado
-            const mats = contarMateriales(obra)
+            const { total, maximo } = totalMaterialesLabel(obra)
             return (
               <div key={obra.id} style={{ background: '#FFFFFF', border: '1px solid #E8E6DF', borderRadius: '12px', padding: '14px', opacity: procesando === obra.id ? 0.5 : 1 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
@@ -116,7 +125,7 @@ export default function ObrasLista() {
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ fontSize: '12px', color: mats > 0 ? '#0F6E56' : '#B4B2A9' }}>{mats}/6</span>
+                    <span style={{ fontSize: '12px', color: total > 0 ? '#0F6E56' : '#B4B2A9' }}>{total}/{maximo}</span>
                     <button onClick={() => togglePublicar(obra)} disabled={!!procesando}
                       style={{ width: '44px', height: '24px', borderRadius: '12px', border: 'none', cursor: 'pointer', background: obra.publicada ? '#0F6E56' : '#D3D1C7', position: 'relative', transition: 'background 0.2s' }}>
                       <span style={{ position: 'absolute', top: '3px', left: obra.publicada ? '22px' : '3px', width: '18px', height: '18px', borderRadius: '50%', background: '#FFFFFF', transition: 'left 0.2s' }} />
@@ -155,7 +164,7 @@ export default function ObrasLista() {
           )}
           {obrasFiltradas.map((obra, i) => {
             const badge = BADGE[obra.estado] || BADGE.archivado
-            const mats = contarMateriales(obra)
+            const { total, maximo } = totalMaterialesLabel(obra)
             const esUltima = i === obrasFiltradas.length - 1
             return (
               <div key={obra.id} style={{ display: 'grid', gridTemplateColumns: '1fr 130px 80px 100px 120px', padding: '12px 16px', alignItems: 'center', borderBottom: esUltima ? 'none' : '1px solid #F1EFE8', opacity: procesando === obra.id ? 0.5 : 1 }}>
@@ -167,7 +176,7 @@ export default function ObrasLista() {
                   {badge.txt}
                 </span>
                 <div style={{ textAlign: 'center' }}>
-                  <span style={{ fontSize: '12px', color: mats > 0 ? '#0F6E56' : '#B4B2A9', fontWeight: '500' }}>{mats}/6</span>
+                  <span style={{ fontSize: '12px', color: total > 0 ? '#0F6E56' : '#B4B2A9', fontWeight: '500' }}>{total}/{maximo}</span>
                 </div>
                 <div style={{ textAlign: 'center' }}>
                   <button onClick={() => togglePublicar(obra)} disabled={!!procesando}

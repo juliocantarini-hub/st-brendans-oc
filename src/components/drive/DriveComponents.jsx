@@ -15,6 +15,7 @@ export function driveUrlImprimir(fileId) {
 
 export function DriveVisor({ fileId, titulo = 'Partitura', onAbrir }) {
   const [estado, setEstado] = useState('cargando')
+
   if (!fileId) {
     return (
       <div style={estilos.vacio}>
@@ -22,13 +23,41 @@ export function DriveVisor({ fileId, titulo = 'Partitura', onAbrir }) {
       </div>
     )
   }
+
   return (
     <div style={{ borderRadius: '10px', overflow: 'hidden', border: '1px solid #E8E6DF' }}>
+
+      {/* Controles ARRIBA */}
+      {estado === 'ok' && (
+        <div style={estilos.pdfFooter}>
+          <a href={driveUrlPDF(fileId)}
+            target="_blank" rel="noopener noreferrer"
+            style={estilos.linkBtn}
+            onClick={() => onAbrir && onAbrir()}
+          >
+            Abrir ↗
+          </a>
+          <a href={driveUrlDescarga(fileId)}
+            target="_blank" rel="noopener noreferrer"
+            style={{ ...estilos.linkBtn, color: '#5F5E5A' }}
+          >
+            Descargar
+          </a>
+          <a href={driveUrlImprimir(fileId)}
+            target="_blank" rel="noopener noreferrer"
+            style={{ ...estilos.linkBtn, color: '#5F5E5A' }}
+          >
+            🖨 Abrir para imprimir
+          </a>
+        </div>
+      )}
+
       {estado === 'cargando' && (
-        <div style={{ ...estilos.vacio, height: '80px' }}>
+        <div style={{ ...estilos.vacio, height: '80px', borderRadius: 0, border: 'none', borderBottom: '1px solid #E8E6DF' }}>
           <p style={{ fontSize: '12px', color: '#888780' }}>Cargando partitura...</p>
         </div>
       )}
+
       <iframe
         src={driveUrlPDF(fileId)}
         title={titulo}
@@ -39,35 +68,6 @@ export function DriveVisor({ fileId, titulo = 'Partitura', onAbrir }) {
         onLoad={() => setEstado('ok')}
         onError={() => setEstado('error')}
       />
-      {estado === 'ok' && (
-        <div style={estilos.pdfFooter}>
-          
-         <a href={driveUrlPDF(fileId)}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={estilos.linkBtn}
-            onClick={() => onAbrir && onAbrir()}
-          >
-            Abrir ↗
-          </a>
-          
-         <a href={driveUrlDescarga(fileId)}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{ ...estilos.linkBtn, color: '#5F5E5A' }}
-          >
-            Descargar
-          </a>
-          
-          <a href={driveUrlImprimir(fileId)}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{ ...estilos.linkBtn, color: '#5F5E5A' }}
-          >
-            🖨 Abrir para imprimir
-          </a>
-        </div>
-      )}
     </div>
   )
 }
@@ -109,11 +109,11 @@ export function AudioPlayer({ fileId, nombre, destacado = false, onReproducir })
 
 export function ListaAudios({ obra, vozUsuario, onReproducir }) {
   const audios = [
-    { key: 'drive_audio_general',   nombre: 'Audio general',   voz: null },
-    { key: 'drive_audio_soprano',   nombre: 'Soprano',         voz: 'soprano' },
-    { key: 'drive_audio_contralto', nombre: 'Contralto',       voz: 'contralto' },
-    { key: 'drive_audio_tenor',     nombre: 'Tenor',           voz: 'tenor' },
-    { key: 'drive_audio_bajo',      nombre: 'Bajo',            voz: 'bajo' },
+    { key: 'drive_audio_general',   nombre: 'Audio general', voz: null },
+    { key: 'drive_audio_soprano',   nombre: 'Soprano',       voz: 'soprano' },
+    { key: 'drive_audio_contralto', nombre: 'Contralto',     voz: 'contralto' },
+    { key: 'drive_audio_tenor',     nombre: 'Tenor',         voz: 'tenor' },
+    { key: 'drive_audio_bajo',      nombre: 'Bajo',          voz: 'bajo' },
   ]
   if (audios.filter(a => obra[a.key]).length === 0) {
     return (
@@ -148,7 +148,7 @@ const estilos = {
   vaciTxt: { fontSize: '13px', color: '#888780', margin: 0 },
   pdfFooter: {
     display: 'flex', gap: '12px', padding: '10px 14px',
-    background: '#F8F7F3', borderTop: '1px solid #E8E6DF',
+    background: '#F8F7F3', borderBottom: '1px solid #E8E6DF',
   },
   linkBtn: {
     fontSize: '12px', color: '#0F6E56', fontWeight: '500',
