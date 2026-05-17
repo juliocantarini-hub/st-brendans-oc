@@ -39,7 +39,7 @@ export default function AppLayout({ children }) {
   }
 
   const esAdmin = location.pathname.startsWith('/admin')
-  const seccionAdminEfectiva = seccionAdmin || esAdmin
+  const seccionAdminEfectiva = seccionAdmin
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: '#F1EFE8' }}>
