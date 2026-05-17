@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
+import { getCoroActual } from '../lib/coro'
 import { useAuth } from './useAuth'
 
 function ordenarAudios(audios) {
@@ -36,9 +37,12 @@ export function useObras(filtros = {}) {
     setCargando(true)
     setError(null)
     try {
+      const coro = await getCoroActual()
+
       let query = supabase
         .from('obras')
         .select(`*, progreso_estudio!left(estado)`)
+        .eq('coro_id', coro.id)
         .eq('publicada', true)
         .order('orden', { ascending: true }).order('titulo')
 
@@ -130,9 +134,10 @@ export async function marcarProgreso(usuarioId, obraId, estado) {
 // ─── CRUD de obras (admin/director) ──────────────────────────────────────────
 export async function crearObra(datos) {
   const { audios, ...datosSinAudios } = datos
+  const coro = await getCoroActual()
   const { data, error } = await supabase
     .from('obras')
-    .insert([{ ...datosSinAudios, publicada: false }])
+    .insert([{ ...datosSinAudios, coro_id: coro.id, publicada: false }])
     .select()
     .single()
   return { ok: !error, data, error: error?.message }
@@ -201,20 +206,27 @@ export function useObrasAdmin() {
 
   const cargar = useCallback(async () => {
     setCargando(true)
-    const { data, error: err } = await supabase
-      .from('obras')
-      .select('*')
-      .order('orden', { ascending: true }).order('creado_en', { ascending: false })
-    if (err) { setError(err.message); setCargando(false); return }
+    try {
+      const coro = await getCoroActual()
+      const { data, error: err } = await supabase
+        .from('obras')
+        .select('*')
+        .eq('coro_id', coro.id)
+        .order('orden', { ascending: true }).order('creado_en', { ascending: false })
+      if (err) { setError(err.message); setCargando(false); return }
 
-    const obraIds = (data || []).map(o => o.id)
-    const audiosMap = await cargarAudiosParaObras(obraIds)
+      const obraIds = (data || []).map(o => o.id)
+      const audiosMap = await cargarAudiosParaObras(obraIds)
 
-    setObras((data || []).map(o => ({
-      ...o,
-      audios: ordenarAudios(audiosMap[o.id] || []),
-    })))
-    setCargando(false)
+      setObras((data || []).map(o => ({
+        ...o,
+        audios: ordenarAudios(audiosMap[o.id] || []),
+      })))
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setCargando(false)
+    }
   }, [])
 
   useEffect(() => { cargar() }, [cargar])
