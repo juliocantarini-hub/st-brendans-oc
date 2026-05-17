@@ -2,6 +2,29 @@ import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from './useAuth'
 
+function ordenarAudios(audios) {
+  const orden = { general: 0, soprano: 1, contralto: 2, tenor: 3, bajo: 4 }
+  return (audios || []).sort((a, b) => {
+    const vozA = orden[a.voz] ?? 99
+    const vozB = orden[b.voz] ?? 99
+    return vozA !== vozB ? vozA - vozB : a.parte - b.parte
+  })
+}
+
+async function cargarAudiosParaObras(obraIds) {
+  if (!obraIds.length) return {}
+  const { data } = await supabase
+    .from('obras_audios')
+    .select('id, obra_id, voz, parte, drive_id, etiqueta')
+    .in('obra_id', obraIds)
+  const mapa = {}
+  for (const a of data || []) {
+    if (!mapa[a.obra_id]) mapa[a.obra_id] = []
+    mapa[a.obra_id].push(a)
+  }
+  return mapa
+}
+
 // ─── Hook principal de repertorio ─────────────────────────────────────────────
 export function useObras(filtros = {}) {
   const { usuario } = useAuth()
@@ -15,11 +38,7 @@ export function useObras(filtros = {}) {
     try {
       let query = supabase
         .from('obras')
-        .select(`
-          *,
-          progreso_estudio!left(estado),
-          obras_audios(id, voz, parte, drive_id, etiqueta)
-        `)
+        .select(`*, progreso_estudio!left(estado)`)
         .eq('publicada', true)
         .order('orden', { ascending: true }).order('titulo')
 
@@ -33,15 +52,13 @@ export function useObras(filtros = {}) {
       const { data, error: err } = await query
       if (err) throw err
 
+      const obraIds = (data || []).map(o => o.id)
+      const audiosMap = await cargarAudiosParaObras(obraIds)
+
       const obras = (data || []).map(o => ({
         ...o,
         progreso: o.progreso_estudio?.[0]?.estado || 'pendiente',
-        audios: (o.obras_audios || []).sort((a, b) => {
-          const orden = { general: 0, soprano: 1, contralto: 2, tenor: 3, bajo: 4 }
-          const vozA = orden[a.voz] ?? 99
-          const vozB = orden[b.voz] ?? 99
-          return vozA !== vozB ? vozA - vozB : a.parte - b.parte
-        }),
+        audios: ordenarAudios(audiosMap[o.id] || []),
       }))
       setObras(obras)
     } catch (err) {
@@ -72,24 +89,21 @@ export function useObra(id) {
         .select(`
           *,
           progreso_estudio!left(estado),
-          eventos_obras(evento_id, orden, eventos(id, titulo, fecha_inicio)),
-          obras_audios(id, voz, parte, drive_id, etiqueta)
+          eventos_obras(evento_id, orden, eventos(id, titulo, fecha_inicio))
         `)
         .eq('id', id)
         .eq('publicada', true)
         .single()
 
       if (err) { setError('Obra no encontrada.'); setCargando(false); return }
+
+      const audiosMap = await cargarAudiosParaObras([id])
+
       setObra({
         ...data,
         progreso: data.progreso_estudio?.[0]?.estado || 'pendiente',
         eventos: data.eventos_obras?.map(eo => eo.eventos).filter(Boolean) || [],
-        audios: (data.obras_audios || []).sort((a, b) => {
-          const orden = { general: 0, soprano: 1, contralto: 2, tenor: 3, bajo: 4 }
-          const vozA = orden[a.voz] ?? 99
-          const vozB = orden[b.voz] ?? 99
-          return vozA !== vozB ? vozA - vozB : a.parte - b.parte
-        }),
+        audios: ordenarAudios(audiosMap[id] || []),
       })
       setCargando(false)
     }
@@ -153,9 +167,6 @@ export async function eliminarObra(id) {
 
 // ─── CRUD de audios ───────────────────────────────────────────────────────────
 export async function guardarAudiosObra(obraId, audios) {
-  // audios = [{ id?, voz, parte, drive_id, etiqueta }]
-  // Estrategia: borrar los existentes y reinsertar
-  // Más simple que hacer diff, y los audios son pocos
   const { error: errorDelete } = await supabase
     .from('obras_audios')
     .delete()
@@ -192,17 +203,16 @@ export function useObrasAdmin() {
     setCargando(true)
     const { data, error: err } = await supabase
       .from('obras')
-      .select('*, obras_audios(id, voz, parte, drive_id, etiqueta)')
+      .select('*')
       .order('orden', { ascending: true }).order('creado_en', { ascending: false })
     if (err) { setError(err.message); setCargando(false); return }
+
+    const obraIds = (data || []).map(o => o.id)
+    const audiosMap = await cargarAudiosParaObras(obraIds)
+
     setObras((data || []).map(o => ({
       ...o,
-      audios: (o.obras_audios || []).sort((a, b) => {
-        const orden = { general: 0, soprano: 1, contralto: 2, tenor: 3, bajo: 4 }
-        const vozA = orden[a.voz] ?? 99
-        const vozB = orden[b.voz] ?? 99
-        return vozA !== vozB ? vozA - vozB : a.parte - b.parte
-      }),
+      audios: ordenarAudios(audiosMap[o.id] || []),
     })))
     setCargando(false)
   }, [])
