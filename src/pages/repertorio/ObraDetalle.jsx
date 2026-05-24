@@ -60,18 +60,21 @@ export default function ObraDetalle() {
     }
   }, [obra, usuario, id])
 
-  // Cuando carga la obra, preseleccionar el audio de la voz del cantante
   useEffect(() => {
-    if (!obra?.audios?.length || !perfil?.voz) return
-    // Si ya hay selección manual, no pisar
+    if (!obra?.audios?.length) return
     if (audioSeleccionado) return
-    // Buscar audios de su voz
-    const desuVoz = obra.audios.filter(a => a.voz === perfil.voz)
+
+    const voz = perfil?.voz
+    if (!voz || voz === 'director') {
+      const demo = obra.audios.find(a => a.voz === 'general')
+      if (demo) setAudioSeleccionado(demo)
+      return
+    }
+
+    const desuVoz = obra.audios.filter(a => a.voz === voz)
     if (desuVoz.length === 1) {
-      // Solo una parte: preseleccionar automáticamente
       setAudioSeleccionado(desuVoz[0])
     }
-    // Si hay más de una parte (S1/S2), NO preseleccionar — el cantante elige
   }, [obra, perfil])
 
   const progresoActual = progreso ?? obra?.progreso ?? 'pendiente'
@@ -113,17 +116,14 @@ export default function ObraDetalle() {
 
   const audiosDisponibles = obra.audios || []
 
-  // Conteo de partes por voz para mostrar etiquetas numeradas
   const conteoPorVoz = audiosDisponibles.reduce((acc, a) => {
     acc[a.voz] = (acc[a.voz] || 0) + 1
     return acc
   }, {})
 
-  // Audio a reproducir: selección manual > ninguno (si su voz tiene varias partes > el cantante elige)
   const audioMostrado = audioSeleccionado || null
 
-  // ¿Tiene audios de su voz con múltiples partes? → mostrar aviso
-  const partesDesuVoz = perfil?.voz
+  const partesDesuVoz = perfil?.voz && perfil.voz !== 'director'
     ? audiosDisponibles.filter(a => a.voz === perfil.voz)
     : []
   const tieneMultiplesParte = partesDesuVoz.length > 1
@@ -144,7 +144,7 @@ export default function ObraDetalle() {
 
         <div style={{ display: 'flex', flexDirection: esMovil ? 'row' : 'column', flexWrap: 'wrap', gap: '6px', marginBottom: audioMostrado ? '12px' : '0' }}>
           {audiosDisponibles.map(audio => {
-            const esDesuVoz = audio.voz === perfil?.voz
+            const esDesuVoz = perfil?.voz && perfil.voz !== 'director' && audio.voz === perfil.voz
             const seleccionado = audioMostrado?.voz === audio.voz && audioMostrado?.parte === audio.parte
             const label = etiquetaAudio(audio, conteoPorVoz)
             return (
@@ -191,7 +191,6 @@ export default function ObraDetalle() {
         Volver al repertorio
       </button>
 
-      {/* Cabecera */}
       <div style={{ background: '#FFFFFF', border: '1px solid #E8E6DF', borderRadius: '12px', padding: '20px', marginBottom: '16px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px', flexWrap: 'wrap' }}>
           <div>
@@ -218,50 +217,30 @@ export default function ObraDetalle() {
         </div>
       </div>
 
-      {/* Móvil */}
       {esMovil && (
         <>
           <div style={{ marginBottom: '14px' }}><PanelAudios /></div>
-
           {obra.notas_director && (
             <div style={{ background: '#FFFFFF', border: '1px solid #E8E6DF', borderRadius: '12px', padding: '14px', marginBottom: '14px' }}>
-              <div style={{ fontSize: '11px', fontWeight: '600', color: '#5F5E5A', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px' }}>
-                Notas del director
-              </div>
-              <div style={{ fontSize: '12px', color: '#3D1608', lineHeight: '1.6', fontStyle: 'italic', background: '#FAECE7', borderLeft: '3px solid #D85A30', borderRadius: '0 6px 6px 0', padding: '8px 10px' }}>
-                "{obra.notas_director}"
-              </div>
+              <div style={{ fontSize: '11px', fontWeight: '600', color: '#5F5E5A', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px' }}>Notas del director</div>
+              <div style={{ fontSize: '12px', color: '#3D1608', lineHeight: '1.6', fontStyle: 'italic', background: '#FAECE7', borderLeft: '3px solid #D85A30', borderRadius: '0 6px 6px 0', padding: '8px 10px' }}>"{obra.notas_director}"</div>
             </div>
           )}
-
-          <DriveVisor
-            fileId={obra.drive_partitura_id}
-            titulo={obra.titulo}
-            onAbrir={() => usuario && registrarActividad(usuario.id, id, 'partitura_abierta')}
-          />
+          <DriveVisor fileId={obra.drive_partitura_id} titulo={obra.titulo} onAbrir={() => usuario && registrarActividad(usuario.id, id, 'partitura_abierta')} />
         </>
       )}
 
-      {/* Desktop */}
       {!esMovil && (
         <div style={{ display: 'flex', gap: '14px', alignItems: 'flex-start' }}>
           <div style={{ flex: '1 1 300px', minWidth: 0 }}>
-            <DriveVisor
-              fileId={obra.drive_partitura_id}
-              titulo={obra.titulo}
-              onAbrir={() => usuario && registrarActividad(usuario.id, id, 'partitura_abierta')}
-            />
+            <DriveVisor fileId={obra.drive_partitura_id} titulo={obra.titulo} onAbrir={() => usuario && registrarActividad(usuario.id, id, 'partitura_abierta')} />
           </div>
           <div style={{ width: '240px', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <PanelAudios />
             {obra.notas_director && (
               <div style={{ background: '#FFFFFF', border: '1px solid #E8E6DF', borderRadius: '12px', padding: '14px' }}>
-                <div style={{ fontSize: '11px', fontWeight: '600', color: '#5F5E5A', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px' }}>
-                  Notas del director
-                </div>
-                <div style={{ fontSize: '12px', color: '#3D1608', lineHeight: '1.6', fontStyle: 'italic', background: '#FAECE7', borderLeft: '3px solid #D85A30', borderRadius: '0 6px 6px 0', padding: '8px 10px' }}>
-                  "{obra.notas_director}"
-                </div>
+                <div style={{ fontSize: '11px', fontWeight: '600', color: '#5F5E5A', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px' }}>Notas del director</div>
+                <div style={{ fontSize: '12px', color: '#3D1608', lineHeight: '1.6', fontStyle: 'italic', background: '#FAECE7', borderLeft: '3px solid #D85A30', borderRadius: '0 6px 6px 0', padding: '8px 10px' }}>"{obra.notas_director}"</div>
               </div>
             )}
           </div>
