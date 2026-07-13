@@ -163,14 +163,11 @@ export async function publicarObra(id, publicada) {
 }
 
 export async function eliminarObra(id) {
-  const r1 = await supabase.from('eventos_obras').delete().eq('obra_id', id)
-  console.log('eventos_obras:', r1.error?.message)
-  const r2 = await supabase.from('obras_audios').delete().eq('obra_id', id)
-  console.log('obras_audios:', r2.error?.message)
-  const r3 = await supabase.from('progreso_estudio').delete().eq('obra_id', id)
-  console.log('progreso_estudio:', r3.error?.message)
+  await supabase.from('eventos_obras').delete().eq('obra_id', id)
+  await supabase.from('obras_audios').delete().eq('obra_id', id)
+  await supabase.from('progreso_estudio').delete().eq('obra_id', id)
+  await supabase.from('avisos').update({ obra_id: null }).eq('obra_id', id)
   const { error } = await supabase.from('obras').delete().eq('id', id)
-  console.log('obras:', error?.message)
   return { ok: !error, error: error?.message }
 }
 
