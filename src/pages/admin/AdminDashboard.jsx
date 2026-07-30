@@ -3,6 +3,9 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { getCoroActual } from '../../lib/coro'
 import EncuestaDashboard from '../../components/EncuestaDashboard'
+import ResumenFinanciero from '../../components/ResumenFinanciero'
+import AsistenciaMes from '../../components/AsistenciaMes'
+import ResumenEstudio from '../../components/ResumenEstudio'
 
 export default function AdminDashboard() {
   const navigate = useNavigate()
@@ -63,9 +66,6 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* Encuesta activa — solo aparece si hay una encuesta abierta */}
-      <EncuestaDashboard esAdmin={true} />
-
       <div style={{ marginBottom: '24px' }}>
         <h3 style={{ fontSize: '12px', fontWeight: '600', color: '#5F5E5A', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 12px' }}>
           Acciones rápidas
@@ -108,6 +108,20 @@ export default function AdminDashboard() {
             </div>
           ))}
         </div>
+      </div>
+
+      <div style={{ marginTop: '32px' }}>
+        {/* Asistencia promedio del mes */}
+        <AsistenciaMes />
+
+        {/* Resumen financiero del mes — cuota + colectas activas */}
+        <ResumenFinanciero />
+
+        {/* Obras en estudio vs. dominadas */}
+        <ResumenEstudio />
+
+        {/* Encuesta activa — solo aparece si hay una encuesta abierta */}
+        <EncuestaDashboard esAdmin={true} />
       </div>
     </div>
   )

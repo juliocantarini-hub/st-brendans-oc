@@ -32,7 +32,6 @@ export function useHistorialAsistencia(perfilId) {
     if (!perfilId) return
     const cargar = async () => {
       const coro = await getCoroActual()
-      // Primero obtenemos los IDs de listas de este coro
       const { data: listas } = await supabase
         .from('listas_asistencia')
         .select('id')
@@ -77,7 +76,7 @@ export function useRegistrosLista(listaId) {
   }, [listaId])
 
   useEffect(() => { cargar() }, [cargar])
-  return { registros, setRegistros, cantantes, cargando, recargar: cargar } // ← setRegistros expuesto
+  return { registros, setRegistros, cantantes, cargando, recargar: cargar }
 }
 
 export async function crearLista(fecha, descripcion) {
@@ -143,4 +142,54 @@ export function calcularRacha(historial) {
     else break
   }
   return racha
+}
+
+// Para el Dashboard del director: asistencia promedio del mes actual (todos los cantantes)
+export function useAsistenciaMesActual() {
+  const [resumen, setResumen] = useState(null)
+  const [cargando, setCargando] = useState(true)
+
+  useEffect(() => {
+    async function cargar() {
+      const coro = await getCoroActual()
+      if (!coro) { setCargando(false); return }
+
+      const hoy = new Date()
+      const fmt = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+      const primerDia = fmt(new Date(hoy.getFullYear(), hoy.getMonth(), 1))
+      const ultimoDia = fmt(new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0))
+
+      const { data: listas } = await supabase
+        .from('listas_asistencia')
+        .select('id, fecha, registros_asistencia(estado)')
+        .eq('coro_id', coro.id)
+        .gte('fecha', primerDia)
+        .lte('fecha', ultimoDia)
+
+      const todas = listas || []
+      let presentes = 0, ausentes = 0, justificados = 0, total = 0
+
+      todas.forEach(l => {
+        (l.registros_asistencia || []).forEach(r => {
+          total++
+          if (r.estado === 'presente') presentes++
+          else if (r.estado === 'ausente') ausentes++
+          else if (r.estado === 'justificado') justificados++
+        })
+      })
+
+      setResumen({
+        cantidadEnsayos: todas.length,
+        total,
+        presentes,
+        ausentes,
+        justificados,
+        porcentaje: total > 0 ? Math.round((presentes / total) * 100) : 0,
+      })
+      setCargando(false)
+    }
+    cargar()
+  }, [])
+
+  return { resumen, cargando }
 }
