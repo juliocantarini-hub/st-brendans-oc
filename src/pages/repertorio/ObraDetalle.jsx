@@ -178,7 +178,7 @@ export default function ObraDetalle() {
             key={`${audioMostrado.voz}-${audioMostrado.parte}-${audioMostrado.drive_id}`}
             src={`https://drive.google.com/file/d/${audioMostrado.drive_id}/preview`}
             width="100%"
-            height="100px"
+            height="120px"
             allow="autoplay"
             style={{ border: 'none', borderRadius: '8px', display: 'block' }}
           />
